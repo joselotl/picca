@@ -202,7 +202,7 @@ def compute_cor_reso_matrix(dll, mean_reso_matrix, ll):
     #define output k array (could be an argument instead)
     k = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_v
     #interpolate to output k array
-    W2_int=spint.interp1d(k_v, W2_r, fill_value=(1,0))
+    W2_int=spint.interp1d(k_v, W2_r, fill_value=(1,0),bounds_error=False)
     Wres2=W2_int(k)
 
 
