@@ -5,6 +5,7 @@ from scipy.fftpack import fft
 
 from picca import constants
 from picca.utils import print
+import scipy.interpolate as sciint
 
 
 def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel):
@@ -178,16 +179,33 @@ def compute_cor_reso_matrix(dll, mean_reso_matrix, ll):
     Perform the resolution + pixelization correction assuming general resolution kernel
      as e.g. DESI resolution matrix
     """
-    delta_pixel = dll*sp.log(10.)*constants.speed_light/1000.
+    length_lambda_r = (10**ll[-1]-10**ll[0])/len(ll)#dll*sp.log(10.)*constants.speed_light/1000.
+    length_lambda_v = dll*constants.speed_light/1000.*sp.log(10.)*len(ll)
+
     r=mean_reso_matrix
     r=sp.append(r, sp.zeros(ll.size-mean_reso_matrix.size))
-    k, Wres2 = compute_Pk_raw(dll,r,ll)
-    Wres2 /= Wres2[0]
 
-    nb_bin_FFT = len(k)
+    # make 1D FFT
+    nb_pixels = len(r)
+    nb_bin_FFT = nb_pixels//2 + 1
+    fft_a = fft(r)
+
+    # compute power spectrum
+    fft_a = fft_a[:nb_bin_FFT]
+    W2_r = (fft_a.real**2+fft_a.imag**2)*length_lambda_r/nb_pixels**2
+    k_r = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_r
+    k_v=k_r/(constants.speed_light/1000.)*(10**ll[-1]+10**ll[0])/2
+
+    W2_int=sciint.interp1d(k_v,W2_r)
+
+    k = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_v
+
+    Wres2=W2_int(k)
+
+
     sinc = sp.ones(nb_bin_FFT)
-    sinc[k > 0.] = (sp.sin(k[k > 0.] * delta_pixel / 2.0) /
-                    (k[k > 0.] * delta_pixel / 2.0))**2
+    sinc[k > 0.] = (sp.sin(k[k > 0.] * length_lambda_v / len(ll) / 2.0) /
+                    (k[k > 0.] * length_lambda_v / len(ll) / 2.0))**2
     cor = sp.ones(nb_bin_FFT)
     cor *= Wres2
     cor *= sinc
