@@ -190,17 +190,19 @@ def compute_cor_reso_matrix(dll, mean_reso_matrix, ll):
     nb_bin_FFT = nb_pixels//2 + 1
     fft_a = fft(r)
 
-    # compute power spectrum
+    # compute window correction in 1/wavelength bins
     fft_a = fft_a[:nb_bin_FFT]
     W2_r = (fft_a.real**2+fft_a.imag**2)*length_lambda_r/nb_pixels**2
+    W2_r /= W2_r[0]
     k_r = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_r
+
+    #convert k-bins to velocity space
     k_v=k_r/(constants.speed_light/1000.)*(10**ll[-1]+10**ll[0])/2
 
-    W2_int=sciint.interp1d(k_v,W2_r)
-
+    #define output k array (could be an argument instead)
     k = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_v
-
-    Wres2=W2_int(k)
+    #interpolate to output k array
+    Wres2=W2_int(k,fill_value=(1,0))
 
 
     sinc = sp.ones(nb_bin_FFT)
