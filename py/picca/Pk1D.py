@@ -179,7 +179,7 @@ def compute_cor_reso_matrix(dll, mean_reso_matrix, ll):
     Perform the resolution + pixelization correction assuming general resolution kernel
      as e.g. DESI resolution matrix
     """
-    length_lambda_r = (10**ll[-1]-10**ll[0])/len(ll)#dll*sp.log(10.)*constants.speed_light/1000.
+    length_lambda_r = (10**ll[-1]-10**ll[0])#dll*sp.log(10.)*constants.speed_light/1000.
     length_lambda_v = dll*constants.speed_light/1000.*sp.log(10.)*len(ll)
 
     r=mean_reso_matrix
