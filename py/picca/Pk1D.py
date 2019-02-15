@@ -202,8 +202,9 @@ def compute_cor_reso_matrix(dll, mean_reso_matrix, ll):
     #define output k array (could be an argument instead)
     k = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_v
     #interpolate to output k array
-    W2_int=spint.interp1d(k_v, W2_r, fill_value=(1,0),bounds_error=False)
-    Wres2=W2_int(k)
+    sqneglogW=np.sqrt(-np.log(W2_r)) #as W is close to gaussian in k, this will be close to linear in k
+    W2_int=spint.interp1d(k_v, sqneglogW, fill_value=(1,0),bounds_error=False)
+    Wres2=np.exp(W2_int(k)**2)
 
 
     sinc = sp.ones(nb_bin_FFT)
