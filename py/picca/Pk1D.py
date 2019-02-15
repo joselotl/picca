@@ -5,7 +5,7 @@ from scipy.fftpack import fft
 
 from picca import constants
 from picca.utils import print
-import scipy.interpolate as sciint
+import scipy.interpolate as spint
 
 
 def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel):
