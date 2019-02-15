@@ -204,7 +204,7 @@ def compute_cor_reso_matrix(dll, mean_reso_matrix, ll):
     #interpolate to output k array
     sqneglogW=sp.sqrt(-sp.log(W2_r)) #as W is close to gaussian in k, this will be close to linear in k
     W2_int=spint.interp1d(k_v, sqneglogW, fill_value=(1,0),bounds_error=False)
-    Wres2=sp.exp(W2_int(k)**2)
+    Wres2=sp.exp(-W2_int(k)**2)
 
 
     sinc = sp.ones(nb_bin_FFT)
