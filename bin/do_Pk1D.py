@@ -243,7 +243,7 @@ if __name__ == '__main__':
                 elif args.res_estimate == 'noresolution':
                     cor_reso = sp.ones(Pk_raw.shape)
                 elif args.res_estimate == 'pixel':
-                    cor_reso = compute_cor_reso(delta_pixel, d.mean_reso/10000, k)
+                    cor_reso = compute_cor_reso(delta_pixel, d.mean_reso/10000, k)  #just use an extremely high resolution here to mimic pixelization only
 
 
                 # Compute 1D Pk
