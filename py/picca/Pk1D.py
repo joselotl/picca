@@ -197,7 +197,7 @@ def compute_cor_reso_matrix(dll, mean_reso_matrix, ll):
     k_r = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_r
 
     #convert k-bins to velocity space
-    k_v=k_r/(constants.speed_light/1000.)*10**sp.median(ll)
+    k_v=k_r/(constants.speed_light/1000.)*10**sp.mean(ll)
 
     #define output k array (could be an argument instead)
     k = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_v
