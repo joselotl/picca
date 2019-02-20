@@ -242,7 +242,8 @@ if __name__ == '__main__':
                     cor_reso = compute_cor_reso_matrix(d.dll, d.mean_reso_matrix, ll_new)
                 elif args.res_estimate == 'noresolution':
                     cor_reso = sp.ones(Pk_raw.shape)
-
+                elif args.res_estimate == 'pixel':
+                    cor_reso = compute_cor_reso(delta_pixel, d.mean_reso/10000, k)
 
 
                 # Compute 1D Pk
