@@ -5,12 +5,8 @@ import sys
 import fitsio
 import glob
 import healpy
-<<<<<<< HEAD
 from picca import constants
-
-=======
 import scipy.interpolate as interpolate
->>>>>>> origin/master
 
 try:
     import __builtin__
