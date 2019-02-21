@@ -496,7 +496,7 @@ class delta(qso):
             dll =  head['DLL']
             try:
                 reso=h['RESO'][:]
-            except KeyError:
+            except KeyError, ValueError:
                 reso=None
             we = None
             co = None
@@ -504,7 +504,7 @@ class delta(qso):
                 resomat=h['RESOMAT'][:]
                 nremove=resomat.shape[0]//2
                 mean_resomat=sp.mean(resomat[nremove:-nremove,:],axis=0)
-            except KeyError:
+            except KeyError, ValueError:
                 resomat = None
 
             iv=iv.astype(float)   #to ensure the endianess is right for the fft
