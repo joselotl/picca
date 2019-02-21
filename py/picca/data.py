@@ -474,7 +474,7 @@ class delta(qso):
 
         return cls(f.thid,f.ra,f.dec,f.zqso,f.plate,f.mjd,f.fid,ll,we,f.co,de,f.order,
                    iv,diff,f.mean_SNR,f.mean_reso,f.mean_z,f.dll,m_reso_matrix=f.mean_reso_matrix,
-                   reso=f.reso,reso_matrix=f.reso_matrix) 
+                   reso=f.reso,reso_matrix=f.reso_matrix)
 
 
     @classmethod
@@ -496,7 +496,7 @@ class delta(qso):
             dll =  head['DLL']
             try:
                 reso=h['RESO'][:]
-            except KeyError, ValueError:
+            except (KeyError, ValueError):
                 reso=None
             we = None
             co = None
@@ -504,7 +504,7 @@ class delta(qso):
                 resomat=h['RESOMAT'][:]
                 nremove=resomat.shape[0]//2
                 mean_resomat=sp.mean(resomat[nremove:-nremove,:],axis=0)
-            except KeyError, ValueError:
+            except (KeyError, ValueError):
                 resomat = None
 
             iv=iv.astype(float)   #to ensure the endianess is right for the fft
