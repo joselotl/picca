@@ -8,7 +8,7 @@ from picca.utils import print
 import scipy.interpolate as spint
 
 
-def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel):
+def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel,reso=None,reso_matrix=None):
 
     ll_limit=[ll[first_pixel]]
     nb_bin= (len(ll)-first_pixel)//nb_part
@@ -24,6 +24,13 @@ def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel):
     diff_c = diff.copy()
     iv_c = iv.copy()
 
+    if reso is not None:
+        reso_c=reso.copy()
+        reso_arr=[]
+    if reso_matrix is not None:
+        reso_matrix_c=reso_matrix.copy()
+        reso_matrix_arr=[]
+
     for p in range(1,nb_part) :
         ll_limit.append(ll[nb_bin*p+first_pixel])
 
@@ -37,6 +44,10 @@ def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel):
         de_part = de_c[selection]
         diff_part = diff_c[selection]
         iv_part = iv_c[selection]
+        if reso is not None:
+            reso_part = reso_c[selection]
+        if reso_matrix is not None:
+            reso_matrix_part = reso_matrix_c[selection, :]
 
         lam_lya = constants.absorber_IGM["LYA"]
         m_z = (sp.power(10.,ll_part[len(ll_part)-1])+sp.power(10.,ll_part[0]))/2./lam_lya -1.0
@@ -46,7 +57,10 @@ def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel):
         de_arr.append(de_part)
         diff_arr.append(diff_part)
         iv_arr.append(iv_part)
-
+        if reso is not None:
+            reso_arr.append(reso_c[selection])
+        if reso_matrix is not None:
+            reso_matrix_arr.append(reso_matrix_c[selection, :])
     return m_z_arr,ll_arr,de_arr,diff_arr,iv_arr
 
 def rebin_diff_noise(dll,ll,diff):
