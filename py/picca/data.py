@@ -417,7 +417,7 @@ class delta(qso):
         self.mean_reso = m_reso
         self.mean_z = m_z
         self.dll = dll
-        self.mean_reso_matrix=m_reso_matrix
+        self.mean_reso_matrix = m_reso_matrix
         self.reso = reso
 
     @classmethod
@@ -442,7 +442,8 @@ class delta(qso):
 
 
         return cls(f.thid,f.ra,f.dec,f.zqso,f.plate,f.mjd,f.fid,ll,we,f.co,de,f.order,
-                   iv,diff,f.mean_SNR,f.mean_reso,f.mean_z,f.dll,f.mean_reso_matrix)
+                   iv,diff,f.mean_SNR,f.mean_reso,f.mean_z,f.dll,m_reso_matrix=f.mean_reso_matrix,
+                   reso=f.reso)
 
 
     @classmethod
