@@ -131,6 +131,10 @@ if __name__ == '__main__':
     parser.add_argument('--res-estimate', default='Gaussian', required=False,
         help='Resolution correction estimated by: Gaussian, matrix, noresolution, pixel, nopixel')
 
+    parser.add_argument('--res-from-mean', action='store_false', default=True, required=False,
+            help='Should the resolution correction be based on the mean as stored in delta files? '
+                 'Else it will be based on the resolution vector in the delta files, not backwards '
+                 'compatible')
 
     args = parser.parse_args()
 
@@ -210,9 +214,12 @@ if __name__ == '__main__':
             # Split in n parts the forest
             nb_part_max = (len(d.ll)-first_pixel)//nb_pixel_min
             nb_part = min(args.nb_part,nb_part_max)
-            m_z_arr,ll_arr,de_arr,diff_arr,iv_arr = split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel)
-            for f in range(nb_part):
+            if args.res_from_mean:
+                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr =     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel)
+            else:
+                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr, reso_arr=     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,reso=d.reso)
 
+            for f in range(nb_part):
                 # rebin diff spectrum
                 if (args.noise_estimate=='rebin_diff' or args.noise_estimate=='mean_rebin_diff'):
                     diff_arr[f]=rebin_diff_noise(d.dll,ll_arr[f],diff_arr[f])
@@ -236,16 +243,22 @@ if __name__ == '__main__':
 
                 # Compute resolution correction
                 delta_pixel = d.dll*sp.log(10.)*constants.speed_light/1000.
+                if args.res_from_mean:
+                    reso=d.mean_reso
+                    resomat=d.mean_reso_matrix
+                else:
+                    reso=sp.mean(d.reso)
+                    resomat=d.mean_reso_matrix #should change this if the resolution matrix will ever be given in full
                 if args.res_estimate == 'Gaussian':
-                    cor_reso = compute_cor_reso(delta_pixel, d.mean_reso, k)
+                    cor_reso = compute_cor_reso(delta_pixel, reso, k)
                 elif args.res_estimate == 'matrix':
-                    cor_reso = compute_cor_reso_matrix(d.dll, d.mean_reso_matrix, ll_new)
+                    cor_reso = compute_cor_reso_matrix(d.dll, resomat, ll_new)
                 elif args.res_estimate == 'noresolution':
                     cor_reso = sp.ones(Pk_raw.shape)
                 elif args.res_estimate == 'pixel':
-                    cor_reso = compute_cor_reso(delta_pixel, d.mean_reso/10000, k)  #just use an extremely high resolution here to mimic pixelization only
+                    cor_reso = compute_cor_reso(delta_pixel, reso/10000, k)  #just use an extremely high resolution here to mimic pixelization only
                 elif args.res_estimate == 'nopixel':
-                    cor_reso = compute_cor_reso(1e-10, d.mean_reso, k)  #just use an extremely high resolution here to mimic pixelization only
+                    cor_reso = compute_cor_reso(1e-10, reso, k)  #just use an extremely small pixel scale here to mimic resolution only
 
                 # Compute 1D Pk
                 if (args.noise_estimate=='pipeline'):

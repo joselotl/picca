@@ -414,6 +414,8 @@ if __name__ == '__main__':
                 for i in range(nbpixel): line += '{} '.format(d.ll[i])
                 for i in range(nbpixel): line += '{} '.format(d.iv[i])
                 for i in range(nbpixel): line += '{} '.format(d.diff[i])
+                for i in range(nbpixel): line += '{} '.format(d.reso[i])
+
                 if args.use_resolution_matrix:
                     line += '{} '.format(len(d.mean_reso_matrix))
                     for _,r in enumerate(d.mean_reso_matrix): line += '{} '.format(r)
@@ -451,15 +453,19 @@ if __name__ == '__main__':
                     diff = d.diff
                     if diff is None:
                         diff = d.ll*0
+                    reso=d.reso
+                    if reso is None:
+                        reso = d.ll*0
                     if args.use_resolution_matrix:
                         hd+=[{'name':'RESMATN','value':len(d.mean_reso_matrix),'comment':'lenghth of the mean resolution matrix'}]
                         for i,r in enumerate(d.mean_reso_matrix):
                             hd+=[{'name':'RESMAT{:d}'.format(i),'value':r,'comment':'entry of the mean resolution matrix'}]
 
-                    cols=[d.ll,d.de,d.iv,diff]
-                    names=['LOGLAM','DELTA','IVAR','DIFF']
-                    units=['log Angstrom','','','']
-                    comments = ['Log lambda','Delta field','Inverse variance','Difference']
+                    cols=[d.ll,d.de,d.iv,diff,reso]
+                    names=['LOGLAM','DELTA','IVAR','DIFF','RESO']
+                    units=['log Angstrom','','','','km/s']
+                    comments = ['Log lambda','Delta field','Inverse variance',
+                                'Difference','Resolution']
                 else :
                     cols=[d.ll,d.de,d.we,d.co]
                     names=['LOGLAM','DELTA','WEIGHT','CONT']

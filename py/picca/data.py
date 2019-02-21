@@ -403,7 +403,7 @@ class forest(qso):
 
 class delta(qso):
 
-    def __init__(self,thid,ra,dec,zqso,plate,mjd,fid,ll,we,co,de,order,iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=None):
+    def __init__(self,thid,ra,dec,zqso,plate,mjd,fid,ll,we,co,de,order,iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=None,reso=None):
 
         qso.__init__(self,thid,ra,dec,zqso,plate,mjd,fid)
         self.ll = ll
@@ -418,6 +418,7 @@ class delta(qso):
         self.mean_z = m_z
         self.dll = dll
         self.mean_reso_matrix=m_reso_matrix
+        self.reso = reso
 
     @classmethod
     def from_forest(cls,f,st,var_lss,eta,fudge,mc=False):
@@ -461,6 +462,10 @@ class delta(qso):
             m_reso = head['MEANRESO']
             m_z = head['MEANZ']
             dll =  head['DLL']
+            try:
+                reso=h['RESO'][:]
+            except KeyError:
+                reso=None
             we = None
             co = None
             try:
@@ -476,6 +481,7 @@ class delta(qso):
             diff=diff.astype(float)
             de=de.astype(float)
             ll=ll.astype(float)
+            reso=reso.astype(float)
         else :
             iv = None
             diff = None
@@ -486,6 +492,7 @@ class delta(qso):
             we = h['WEIGHT'][:]
             co = h['CONT'][:]
             mean_resomat = None
+            reso = None
 
 
         thid = head['THING_ID']
@@ -501,7 +508,7 @@ class delta(qso):
         except KeyError:
             order = 1
         return cls(thid,ra,dec,zqso,plate,mjd,fid,ll,we,co,de,order,
-                   iv,diff,m_SNR,m_reso,m_z,dll,mean_resomat)
+                   iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=mean_resomat,reso=reso)
 
 
     @classmethod
@@ -524,10 +531,11 @@ class delta(qso):
         ll = sp.array(a[11+nbpixel:11+2*nbpixel]).astype(float)
         iv = sp.array(a[11+2*nbpixel:11+3*nbpixel]).astype(float)
         diff = sp.array(a[11+3*nbpixel:11+4*nbpixel]).astype(float)
+        reso = sp.array(a[11+4*nbpixel:11+5*nbpixel]).astype(float)
 
-        try: #this could be used to get the
-            nresomat = int(a[11+4*nbpixel])
-            mean_resomat = sp.array(a[12+4*nbpixel:12+4*nbpixel+nresomat]).astype(float)
+        try: #this could be used to get the mean resolution matrix
+            nresomat = int(a[11+5*nbpixel])
+            mean_resomat = sp.array(a[12+5*nbpixel:12+5*nbpixel+nresomat]).astype(float)
         except IndexError:
             mean_resomat=None
         thid = 0
