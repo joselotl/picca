@@ -131,7 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--res-estimate', default='Gaussian', required=False,
         help='Resolution correction estimated by: Gaussian, matrix, noresolution, pixel, nopixel')
 
-    parser.add_argument('--res-from-vector', action='store_false', default=True, required=False,
+    parser.add_argument('--res-from-vector', action='store_true', default=False, required=False,
             help='Should the resolution correction be based on the mean as stored in delta files? '
                  'Else it will be based on the resolution vector in the delta files, not backwards '
                  'compatible')
