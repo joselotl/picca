@@ -486,15 +486,11 @@ class delta(qso):
             we = None
             co = None
             try:
-                mean_resomat=h['RESOMAT'][:]
-
-#                n_resmat=head['RESMATN']
-#                mean_resomat=[]
-#                for i in range(n_resmat):
-#                    mean_resomat.append(head['RESMAT{:d}'.format(i)])
-#                mean_resomat=sp.array(mean_resomat)
+                resomat=h['RESOMAT'][:]
+                nremove=resomat.shape[0]//2
+                mean_resomat=sp.mean(reso_matrix[nremove:-nremove,:],axis=0)
             except KeyError:
-                mean_resomat = None
+                resomat = None
 
             iv=iv.astype(float)   #to ensure the endianess is right for the fft
             diff=diff.astype(float)
@@ -527,7 +523,7 @@ class delta(qso):
         except KeyError:
             order = 1
         return cls(thid,ra,dec,zqso,plate,mjd,fid,ll,we,co,de,order,
-                   iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=mean_resomat,reso=reso)
+                   iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=mean_resomat,reso=reso,reso_matrix=resomat)
 
 
     @classmethod
@@ -554,7 +550,7 @@ class delta(qso):
 
         try: #this could be used to get the mean resolution matrix
             nresomat = int(a[11+5*nbpixel])
-            mean_resomat = sp.array(a[12+5*nbpixel:12+5*nbpixel+nresomat]).astype(float)
+            mean_resomat = sp.array(a[12+5*nbpixel:12+5*nbpixel+nresomat]).astype(float) #note that only the mean is written for the ascii. Better use fits tables if using reso matrices
         except IndexError:
             mean_resomat=None
         thid = 0
@@ -563,7 +559,7 @@ class delta(qso):
         co = None
 
         return cls(thid,ra,dec,zqso,plate,mjd,fid,ll,we,co,de,order,
-                   iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=mean_resomat,reso=reso)
+                   iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=mean_resomat,reso=reso,reso_matrix=None)
 
     @staticmethod
     def from_image(f):
