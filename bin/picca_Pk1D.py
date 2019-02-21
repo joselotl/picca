@@ -129,7 +129,7 @@ if __name__ == '__main__':
         help='Fill root histograms for debugging')
 
     parser.add_argument('--res-estimate', default='Gaussian', required=False,
-        help='Resolution correction estimated by: Gaussian, matrix')
+        help='Resolution correction estimated by: Gaussian, matrix, noresolution, pixel, nopixel')
 
 
     args = parser.parse_args()
@@ -244,7 +244,8 @@ if __name__ == '__main__':
                     cor_reso = sp.ones(Pk_raw.shape)
                 elif args.res_estimate == 'pixel':
                     cor_reso = compute_cor_reso(delta_pixel, d.mean_reso/10000, k)  #just use an extremely high resolution here to mimic pixelization only
-
+                elif args.res_estimate == 'nopixel':
+                    cor_reso = compute_cor_reso(1e-10, d.mean_reso, k)  #just use an extremely high resolution here to mimic pixelization only
 
                 # Compute 1D Pk
                 if (args.noise_estimate=='pipeline'):
