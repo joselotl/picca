@@ -466,7 +466,7 @@ if __name__ == '__main__':
 
                     cols=[d.ll,d.de,d.iv,diff]
                     names=['LOGLAM','DELTA','IVAR','DIFF']
-                    units=['log Angstrom','','','','km/s','(pixel)']
+                    units=['log Angstrom','','','']
                     comments = ['Log lambda','Delta field','Inverse variance',
                                 'Difference']
                     if args.use_resolution_matrix:
