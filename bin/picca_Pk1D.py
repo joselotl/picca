@@ -215,9 +215,9 @@ if __name__ == '__main__':
             nb_part_max = (len(d.ll)-first_pixel)//nb_pixel_min
             nb_part = min(args.nb_part,nb_part_max)
             if args.res_from_mean:
-                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr =     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel)
+                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr,_,_ =     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel)
             else:
-                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr, reso_arr=     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,reso=d.reso)
+                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr, reso_arr, reso_matrix_arr=     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,reso=d.reso,reso_matrix=d.reso_matrix)
 
             for f in range(nb_part):
                 # rebin diff spectrum
@@ -248,7 +248,7 @@ if __name__ == '__main__':
                     resomat=d.mean_reso_matrix
                 else:
                     reso=sp.mean(d.reso)
-                    resomat=sp.mean(d.reso_matrix) #should change this if the resolution matrix will ever be given in full
+                    resomat=sp.mean(d.reso_matrix,axis=0) #should change this if the resolution matrix will ever be given in full
                 if args.res_estimate == 'Gaussian':
                     cor_reso = compute_cor_reso(delta_pixel, reso, k)
                 elif args.res_estimate == 'matrix':
