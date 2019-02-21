@@ -8,26 +8,27 @@ from multiprocessing import Pool,Lock,cpu_count,Value
 from picca import constants, cf, utils, io
 from picca.utils import print
 
-def calc_dmat(p):
+def corr_func(p):
     if args.in_dir2:
         cf.fill_neighs_x_correlation(p)
     else:
         cf.fill_neighs(p)
-    sp.random.seed(p[0])
-    tmp = cf.dmat(p)
+    tmp = cf.cf(p)
     return tmp
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description='Compute the distortion matrix of the auto and cross-correlation of delta fields')
-
+        description='Compute the auto and cross-correlation of delta fields')
 
     parser.add_argument('--out', type=str, default=None, required=True,
         help='Output file name')
 
     parser.add_argument('--in-dir', type=str, default=None, required=True,
         help='Directory to delta files')
+
+    parser.add_argument('--from-image', type=str, default=None, required=False,
+        help='Read delta from image format', nargs='*')
 
     parser.add_argument('--in-dir2', type=str, default=None, required=False,
         help='Directory to 2nd delta files')
@@ -79,9 +80,6 @@ if __name__ == '__main__':
     parser.add_argument('--remove-same-half-plate-close-pairs', action='store_true', required=False,
         help='Reject pairs in the first bin in r-parallel from same half plate')
 
-    parser.add_argument('--rej', type=float, default=1., required=False,
-        help='Fraction of rejected forest-forest pairs: -1=no rejection, 1=all rejection')
-
     parser.add_argument('--nside', type=int, default=16, required=False,
         help='Healpix nside')
 
@@ -99,11 +97,9 @@ if __name__ == '__main__':
     if args.nproc is None:
         args.nproc = cpu_count()//2
 
-    print("nproc",args.nproc)
-
     cf.rp_max = args.rp_max
-    cf.rp_min = args.rp_min
     cf.rt_max = args.rt_max
+    cf.rp_min = args.rp_min
     cf.z_cut_max = args.z_cut_max
     cf.z_cut_min = args.z_cut_min
     cf.np = args.np
@@ -111,14 +107,13 @@ if __name__ == '__main__':
     cf.nside = args.nside
     cf.zref = args.z_ref
     cf.alpha = args.z_evol
-    cf.rej = args.rej
     cf.lambda_abs = constants.absorber_IGM[args.lambda_abs]
     cf.remove_same_half_plate_close_pairs = args.remove_same_half_plate_close_pairs
 
     cosmo = constants.cosmo(args.fid_Om)
 
     ### Read data 1
-    data, ndata, zmin_pix, zmax_pix = io.read_deltas(args.in_dir, cf.nside, cf.lambda_abs, cf.alpha, cf.zref, cosmo, nspec=args.nspec, no_project=args.no_project)
+    data, ndata, zmin_pix, zmax_pix = io.read_deltas(args.in_dir, cf.nside, cf.lambda_abs, cf.alpha, cf.zref, cosmo, nspec=args.nspec, no_project=args.no_project, from_image=args.from_image)
     cf.npix = len(data)
     cf.data = data
     cf.ndata = ndata
@@ -127,7 +122,7 @@ if __name__ == '__main__':
     print("done, npix = {}".format(cf.npix))
 
     ### Read data 2
-    if args.in_dir2 or args.lambda_abs2:
+    if args.in_dir2 or args.lambda_abs2 :
         if args.lambda_abs2 or args.unfold_cf:
             cf.x_correlation = True
         cf.alpha2 = args.z_evol2
@@ -138,7 +133,7 @@ if __name__ == '__main__':
         else:
             cf.lambda_abs2 = cf.lambda_abs
 
-        data2, ndata2, zmin_pix2, zmax_pix2 = io.read_deltas(args.in_dir2, cf.nside, cf.lambda_abs2, cf.alpha2, cf.zref, cosmo, nspec=args.nspec, no_project=args.no_project)
+        data2, ndata2, zmin_pix2, zmax_pix2 = io.read_deltas(args.in_dir2, cf.nside, cf.lambda_abs2, cf.alpha2, cf.zref, cosmo, nspec=args.nspec, no_project=args.no_project, from_image=args.from_image)
         cf.data2 = data2
         cf.ndata2 = ndata2
         cf.angmax = utils.compute_ang_max(cosmo,cf.rt_max,zmin_pix,zmin_pix2)
@@ -149,24 +144,30 @@ if __name__ == '__main__':
     cf.counter = Value('i',0)
     cf.lock = Lock()
     cpu_data = {}
-    for i,p in enumerate(sorted(data.keys())):
-        ip = i%args.nproc
-        if not ip in cpu_data:
-            cpu_data[ip] = []
-        cpu_data[ip].append(p)
+    for p in data.keys():
+        cpu_data[p] = [p]
     pool = Pool(processes=args.nproc)
-    dm = pool.map(calc_dmat,sorted(cpu_data.values()))
+    cfs = pool.map(corr_func,sorted(cpu_data.values()))
     pool.close()
 
 
-    dm = sp.array(dm)
-    wdm =dm[:,0].sum(axis=0)
-    npairs=dm[:,2].sum(axis=0)
-    npairs_used=dm[:,3].sum(axis=0)
-    dm=dm[:,1].sum(axis=0)
+    cfs=sp.array(cfs)
+    wes=cfs[:,0,:]
+    rps=cfs[:,2,:]
+    rts=cfs[:,3,:]
+    zs=cfs[:,4,:]
+    nbs=cfs[:,5,:].astype(sp.int64)
+    cfs=cfs[:,1,:]
+    hep=sp.array(sorted(list(cpu_data.keys())))
 
-    w = wdm>0
-    dm[w]/=wdm[w,None]
+    cut      = (wes.sum(axis=0)>0.)
+    rp       = (rps*wes).sum(axis=0)
+    rp[cut] /= wes.sum(axis=0)[cut]
+    rt       = (rts*wes).sum(axis=0)
+    rt[cut] /= wes.sum(axis=0)[cut]
+    z        = (zs*wes).sum(axis=0)
+    z[cut]  /= wes.sum(axis=0)[cut]
+    nb       = nbs.sum(axis=0)
 
 
     out = fitsio.FITS(args.out,'rw',clobber=True)
@@ -177,9 +178,16 @@ if __name__ == '__main__':
         {'name':'NT','value':cf.nt,'comment':'Number of bins in r-transverse'},
         {'name':'ZCUTMIN','value':cf.z_cut_min,'comment':'Minimum redshift of pairs'},
         {'name':'ZCUTMAX','value':cf.z_cut_max,'comment':'Maximum redshift of pairs'},
-        {'name':'REJ','value':cf.rej,'comment':'Rejection factor'},
-        {'name':'NPALL','value':npairs,'comment':'Number of pairs'},
-        {'name':'NPUSED','value':npairs_used,'comment':'Number of used pairs'},
+        {'name':'NSIDE','value':cf.nside,'comment':'Healpix nside'}
     ]
-    out.write([wdm,dm],names=['WDM','DM'],header=head,comment=['Sum of weight','Distortion matrix'],extname='DMAT')
+    out.write([rp,rt,z,nb],names=['RP','RT','Z','NB'],
+        comment=['R-parallel','R-transverse','Redshift','Number of pairs'],
+        units=['h^-1 Mpc','h^-1 Mpc','',''],
+        header=head,extname='ATTRI')
+
+    head2 = [{'name':'HLPXSCHM','value':'RING','comment':'Healpix scheme'}]
+    out.write([hep,wes,cfs],names=['HEALPID','WE','DA'],
+        comment=['Healpix index', 'Sum of weight', 'Correlation'],
+        header=head2,extname='COR')
+
     out.close()

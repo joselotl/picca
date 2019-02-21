@@ -73,74 +73,83 @@ def read_absorbers(file_absorbers):
     return absorbers
 
 def read_drq(drq,zmin,zmax,keep_bal,bi_max=None):
-    vac = fitsio.FITS(drq)
+    h = fitsio.FITS(drq)
 
     ## Redshift
     try:
-        zqso = vac[1]["Z"][:]
+        zqso = h[1]['Z'][:]
     except:
         print("Z not found (new DRQ >= DRQ14 style), using Z_VI (DRQ <= DRQ12)")
-        zqso = vac[1]["Z_VI"][:]
+        zqso = h[1]['Z_VI'][:]
 
     ## Info of the primary observation
-    thid  = vac[1]["THING_ID"][:]
-    ra    = vac[1]["RA"][:].astype('float64')
-    dec   = vac[1]["DEC"][:].astype('float64')
-    plate = vac[1]["PLATE"][:]
-    mjd   = vac[1]["MJD"][:]
-    fid   = vac[1]["FIBERID"][:]
+    thid = h[1]['THING_ID'][:]
+    ra = h[1]['RA'][:].astype('float64')
+    dec = h[1]['DEC'][:].astype('float64')
+    plate = h[1]['PLATE'][:]
+    mjd = h[1]['MJD'][:]
+    fid = h[1]['FIBERID'][:]
 
-    print("")
     ## Sanity
-    print(" start               : nb object in cat = {}".format(ra.size) )
-    w = (thid>0)
-    print(" and thid>0          : nb object in cat = {}".format(ra[w].size) )
-    w = w & (ra!=dec)
-    print(" and ra!=dec         : nb object in cat = {}".format(ra[w].size) )
-    w = w & (ra!=0.)
-    print(" and ra!=0.          : nb object in cat = {}".format(ra[w].size) )
-    w = w & (dec!=0.)
-    print(" and dec!=0.         : nb object in cat = {}".format(ra[w].size) )
-    w = w & (zqso>0.)
-    print(" and z>0.            : nb object in cat = {}".format(ra[w].size) )
+    print('')
+    w = sp.ones(ra.size,dtype=bool)
+    print(" start               : nb object in cat = {}".format(w.sum()) )
+    w &= thid>0
+    print(" and thid>0          : nb object in cat = {}".format(w.sum()) )
+    w &= ra!=dec
+    print(" and ra!=dec         : nb object in cat = {}".format(w.sum()) )
+    w &= ra!=0.
+    print(" and ra!=0.          : nb object in cat = {}".format(w.sum()) )
+    w &= dec!=0.
+    print(" and dec!=0.         : nb object in cat = {}".format(w.sum()) )
+    w &= zqso>0.
+    print(" and z>0.            : nb object in cat = {}".format(w.sum()) )
 
     ## Redshift range
     if not zmin is None:
-        w &= zqso>zmin
-        print(" and z>zmin          : nb object in cat = {}".format(ra[w].size) )
+        w &= zqso>=zmin
+        print(" and z>=zmin         : nb object in cat = {}".format(w.sum()) )
     if not zmax is None:
         w &= zqso<zmax
-        print(" and z<zmax          : nb object in cat = {}".format(ra[w].size) )
+        print(" and z<zmax          : nb object in cat = {}".format(w.sum()) )
 
     ## BAL visual
     if not keep_bal and bi_max==None:
         try:
-            bal_flag = vac[1]["BAL_FLAG_VI"][:]
-            w = w & (bal_flag==0)
+            bal_flag = h[1]['BAL_FLAG_VI'][:]
+            w &= bal_flag==0
             print(" and BAL_FLAG_VI == 0  : nb object in cat = {}".format(ra[w].size) )
         except:
             print("BAL_FLAG_VI not found\n")
     ## BAL CIV
     if bi_max is not None:
         try:
-            bi = vac[1]["BI_CIV"][:]
-            w = w & (bi<=bi_max)
+            bi = h[1]['BI_CIV'][:]
+            w &= bi<=bi_max
             print(" and BI_CIV<=bi_max  : nb object in cat = {}".format(ra[w].size) )
         except:
-            print("--bi-max set but no BI_CIV field in vac")
+            print("--bi-max set but no BI_CIV field in h")
             sys.exit(1)
     print("")
 
-    ra    = ra[w]*sp.pi/180.
-    dec   = dec[w]*sp.pi/180.
-    zqso  = zqso[w]
-    thid  = thid[w]
+    ra = ra[w]*sp.pi/180.
+    dec = dec[w]*sp.pi/180.
+    zqso = zqso[w]
+    thid = thid[w]
     plate = plate[w]
-    mjd   = mjd[w]
-    fid   = fid[w]
-    vac.close()
+    mjd = mjd[w]
+    fid = fid[w]
+    h.close()
 
     return ra,dec,zqso,thid,plate,mjd,fid
+
+def read_dust_map(drq, Rv = 3.793):
+    h = fitsio.FITS(drq)
+    thid = h[1]['THING_ID'][:]
+    ext  = h[1]['EXTINCTION'][:][:,1]/Rv
+    h.close()
+
+    return dict(zip(thid, ext))
 
 target_mobj = 500
 nside_min = 8
@@ -222,8 +231,11 @@ def read_data(in_dir,drq,mode,zmin = 2.1,zmax = 3.5,nspec=None,log=None,keep_bal
 
         return data, len(pixs),nside,"RING"
 
-    if mode=="spplate":
-        pix_data = read_from_spplate(in_dir,thid, ra, dec, zqso, plate, mjd, fid, order, log=log, best_obs=best_obs)
+    if mode in ["spplate","spec","corrected-spec"]:
+        if mode == "spplate":
+            pix_data = read_from_spplate(in_dir,thid, ra, dec, zqso, plate, mjd, fid, order, log=log, best_obs=best_obs)
+        else:
+            pix_data = read_from_spec(in_dir,thid, ra, dec, zqso, plate, mjd, fid, order, mode=mode,log=log, pk1d=pk1d, best_obs=best_obs)
         ra = [d.ra for d in pix_data]
         ra = sp.array(ra)
         dec = [d.dec for d in pix_data]
@@ -245,10 +257,6 @@ def read_data(in_dir,drq,mode,zmin = 2.1,zmax = 3.5,nspec=None,log=None,keep_bal
             t0 = time.time()
             pix_data = read_from_pix(in_dir,pix,thid[w], ra[w], dec[w], zqso[w], plate[w], mjd[w], fid[w], order, log=log)
             read_time=time.time()-t0
-        elif mode == "spec" or mode =="corrected-spec":
-            t0 = time.time()
-            pix_data = read_from_spec(in_dir,thid[w], ra[w], dec[w], zqso[w], plate[w], mjd[w], fid[w], order, mode=mode,log=log, pk1d=pk1d)
-            read_time=time.time()-t0
         elif mode == "spec-mock-1D":
             t0 = time.time()
             pix_data = read_from_mock_1D(in_dir,thid[w], ra[w], dec[w], zqso[w], plate[w], mjd[w], fid[w], order, mode=mode,log=log)
@@ -261,42 +269,114 @@ def read_data(in_dir,drq,mode,zmin = 2.1,zmax = 3.5,nspec=None,log=None,keep_bal
 
     return data,ndata,nside,"RING"
 
-def read_from_spec(in_dir,thid,ra,dec,zqso,plate,mjd,fid,order,mode,log=None,pk1d=None):
+def read_from_spec(in_dir,thid,ra,dec,zqso,plate,mjd,fid,order,mode,log=None,pk1d=None,best_obs=None):
+    drq_dict = {t:(r,d,z) for t,r,d,z in zip(thid,ra,dec,zqso)}
+
+    ## if using multiple observations,
+    ## then replace thid, plate, mjd, fid
+    ## by what's available in spAll
+    if not best_obs:
+        fi = glob.glob(in_dir.replace("spectra/","").replace("lite","").replace("full","")+"/spAll-*.fits")
+        if len(fi) > 1:
+            print("ERROR: found multiple spAll files")
+            print("ERROR: try running with --bestobs option (but you will lose reobservations)")
+            for f in fi:
+                print("found: ",fi)
+            sys.exit(1)
+        if len(fi) == 0:
+            print("ERROR: can't find required spAll file in {}".format(in_dir))
+            print("ERROR: try runnint with --best-obs option (but you will lose reobservations)")
+            sys.exit(1)
+
+        spAll = fitsio.FITS(fi[0])
+        print("INFO: reading spAll from {}".format(fi[0]))
+        thid_spall = spAll[1]["THING_ID"][:]
+        plate_spall = spAll[1]["PLATE"][:]
+        mjd_spall = spAll[1]["MJD"][:]
+        fid_spall = spAll[1]["FIBERID"][:]
+        qual_spall = spAll[1]["PLATEQUALITY"][:]
+        zwarn_spall = spAll[1]["ZWARNING"][:]
+
+        w = sp.in1d(thid_spall, thid) & (qual_spall == b"good")
+        ## Removing spectra with the following ZWARNING bits set:
+        ## SKY, LITTLE_COVERAGE, UNPLUGGED, BAD_TARGET, NODATA
+        ## https://www.sdss.org/dr14/algorithms/bitmasks/#ZWARNING
+        for zwarnbit in [0,1,7,8,9]:
+            w &= (zwarn_spall&2**zwarnbit)==0
+        print("INFO: # unique objs: ",len(thid))
+        print("INFO: # spectra: ",w.sum())
+        thid = thid_spall[w]
+        plate = plate_spall[w]
+        mjd = mjd_spall[w]
+        fid = fid_spall[w]
+        spAll.close()
+
+    ## to simplify, use a list of all metadata
+    allmeta = []
+    ## Used to preserve original order and pass unit tests.
+    t_list = []
+    t_set = set()
+    for t,p,m,f in zip(thid,plate,mjd,fid):
+        if t not in t_set:
+            t_list.append(t)
+            t_set.add(t)
+        r,d,z = drq_dict[t]
+        meta = metadata()
+        meta.thid = t
+        meta.ra = r
+        meta.dec = d
+        meta.zqso = z
+        meta.plate = p
+        meta.mjd = m
+        meta.fid = f
+        meta.order = order
+        allmeta.append(meta)
+
     pix_data = []
-    for t,r,d,z,p,m,f in zip(thid,ra,dec,zqso,plate,mjd,fid):
-        try:
-            fid = str(f)
-            if f<10:
-                fid='0'+fid
-            if f<100:
-                fid = '0'+fid
-            if f<1000:
-                fid = '0'+fid
-            fin = in_dir + "/{}/{}-{}-{}-{}.fits".format(p,mode,p,m,fid)
-            h = fitsio.FITS(fin)
-        except IOError:
-            log.write("error reading {}\n".format(fin))
-            continue
+    thids = {}
 
-        log.write("{} read\n".format(fin))
-        ll = h[1]["loglam"][:]
-        fl = h[1]["flux"][:]
-        iv = h[1]["ivar"][:]*(h[1]["and_mask"][:]==0)
 
-        if(pk1d is not None) :
-            # compute difference between exposure
-            diff = exp_diff(h,ll)
-            # compute spectral resolution
-            wdisp =  h[1]["wdisp"][:]
-            reso = spectral_resolution(wdisp,True,f,ll)
-            d = forest(ll,fl,iv, t, r, d, z, p, m, f,order,diff,reso)
-        else :
-            d = forest(ll,fl,iv, t, r, d, z, p, m, f,order)
+    for meta in allmeta:
+        t = meta.thid
+        if not t in thids:
+            thids[t] = []
+        thids[t].append(meta)
 
-        pix_data.append(d)
-        h.close()
+    print("reading {} thids".format(len(thids)))
+
+    for t in t_list:
+        t_delta = None
+        for meta in thids[t]:
+            r,d,z,p,m,f = meta.ra,meta.dec,meta.zqso,meta.plate,meta.mjd,meta.fid
+            try:
+                fin = in_dir + "/{}/{}-{}-{}-{:04d}.fits".format(p,mode,p,m,f)
+                h = fitsio.FITS(fin)
+            except IOError:
+                log.write("error reading {}\n".format(fin))
+                continue
+            log.write("{} read\n".format(fin))
+            ll = h[1]["loglam"][:]
+            fl = h[1]["flux"][:]
+            iv = h[1]["ivar"][:]*(h[1]["and_mask"][:]==0)
+
+            if pk1d is not None:
+                # compute difference between exposure
+                diff = exp_diff(h,ll)
+                # compute spectral resolution
+                wdisp =  h[1]["wdisp"][:]
+                reso = spectral_resolution(wdisp,True,f,ll)
+            else:
+                diff = None
+                reso = None
+            deltas = forest(ll,fl,iv, t, r, d, z, p, m, f,order,diff=diff,reso=reso)
+            if t_delta is None:
+                t_delta = deltas
+            else:
+                t_delta += deltas
+            h.close()
+        if t_delta is not None:
+            pix_data.append(t_delta)
     return pix_data
-
 
 def read_from_mock_1D(in_dir,thid,ra,dec,zqso,plate,mjd,fid, order,mode,log=None):
     pix_data = []
@@ -700,6 +780,7 @@ def read_deltas(indir,nside,lambda_abs,alpha,zref,cosmo,nspec=None,no_project=Fa
     '''
 
     fi = []
+    indir = os.path.expandvars(indir)
     if from_image is None or len(from_image)==0:
         if len(indir)>8 and indir[-8:]=='.fits.gz':
             fi += glob.glob(indir)

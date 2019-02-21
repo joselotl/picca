@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import scipy as sp
 from picca import constants
-from picca.utils import print
+from picca.utils import print, unred
 import iminuit
 from .dla import dla
 import fitsio
@@ -84,6 +84,9 @@ class forest(qso):
     ### Correction function for multiplicative errors in inverse pipeline variance calibration
     correc_ivar = None
 
+    ### map of g-band extinction to thids for dust correction
+    ebv_map = None
+
     ## absorber pixel mask limit
     absorber_mask = None
 
@@ -99,6 +102,7 @@ class forest(qso):
     mean_reso = None
     mean_z = None
 
+<<<<<<< HEAD
     ## resolution matrix for desi forests
     reso_matrix = None
     mean_reso_matrix = None
@@ -116,6 +120,26 @@ class forest(qso):
         w = w & (ll - sp.log10(1. + self.zqso) < forest.lmax_rest)
         w = w & (iv > 0.)
         if w.sum() == 0:
+=======
+
+    def __init__(self,ll,fl,iv,thid,ra,dec,zqso,plate,mjd,fid,order, diff=None,reso=None, mmef = None):
+        qso.__init__(self,thid,ra,dec,zqso,plate,mjd,fid)
+
+        if not self.ebv_map is None:
+            corr = unred(10**ll,self.ebv_map[thid])
+            fl /= corr
+            iv *= corr**2
+
+        ## cut to specified range
+        bins = sp.floor((ll-forest.lmin)/forest.dll+0.5).astype(int)
+        ll = forest.lmin + bins*forest.dll
+        w = (ll>=forest.lmin)
+        w = w & (ll<forest.lmax)
+        w = w & (ll-sp.log10(1.+self.zqso)>forest.lmin_rest)
+        w = w & (ll-sp.log10(1.+self.zqso)<forest.lmax_rest)
+        w = w & (iv>0.)
+        if w.sum()==0:
+>>>>>>> origin/master
             return
         bins = bins[w]
         ll = ll[w]
@@ -245,9 +269,20 @@ class forest(qso):
             cnew[:len(ccnew)] += ccnew
             setattr(self, k, cnew[w] / civ[w])
 
+<<<<<<< HEAD
 
         #there is no coaddition of resolutions in here (neither for reso nor for reso_matrix), so some patches are necessary to be able to run on desi R-band/Z-band forests; for the resolution matrix this probably does not work at all as pixelization is different!
         #note that some of this already changed in newer master versions
+=======
+        # recompute means of quality variables
+        if self.reso is not None:
+            self.mean_reso = self.reso.mean()
+        err = 1./sp.sqrt(self.iv)
+        SNR = self.fl/err
+        self.mean_SNR = SNR.mean()
+        lam_lya = constants.absorber_IGM["LYA"]
+        self.mean_z = (sp.power(10.,ll[len(ll)-1])+sp.power(10.,ll[0]))/2./lam_lya -1.0
+>>>>>>> origin/master
 
         return self
 

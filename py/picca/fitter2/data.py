@@ -37,12 +37,18 @@ class data:
         rp = h[1]['RP'][:]
         rt = h[1]['RT'][:]
         z = h[1]['Z'][:]
+        try:
+            dmrp = h[2]['DMRP'][:]
+            dmrt = h[2]['DMRT'][:]
+            dmz = h[2]['DMZ'][:]
+        except IOError:
+            dmrp = rp.copy()
+            dmrt = rt.copy()
+            dmz = z.copy()
+        coef_binning_model = sp.sqrt(dmrp.size/rp.size)
         head = h[1].read_header()
 
         h.close()
-
-        r = sp.sqrt(rp**2+rt**2)
-        mu = rp/r
 
         rp_min = dic_init['cuts']['rp-min']
         rp_max = dic_init['cuts']['rp-max']
@@ -84,15 +90,31 @@ class data:
         self.co = co
         ico = co[:,mask]
         ico = ico[mask,:]
+        try:
+            sp.linalg.cholesky(co)
+            print('LOG: Full matrix is positive definite')
+        except sp.linalg.LinAlgError:
+            print('WARNING: Full matrix is not positive definite')
+        try:
+            sp.linalg.cholesky(ico)
+            print('LOG: Reduced matrix is positive definite')
+        except sp.linalg.LinAlgError:
+            print('WARNING: Reduced matrix is not positive definite')
         self.ico = linalg.inv(ico)
         self.dm = dm
 
-        self.rp = rp
-        self.rt = rt
-        self.z = z
+        self.rsquare = sp.sqrt(rp**2+rt**2)
+        self.musquare = sp.zeros(self.rsquare.size)
+        w = self.rsquare>0.
+        self.musquare[w] = rp[w]/self.rsquare[w]
 
-        self.r = r
-        self.mu = mu
+        self.rp = dmrp
+        self.rt = dmrt
+        self.z = dmz
+        self.r = sp.sqrt(self.rp**2+self.rt**2)
+        self.mu = sp.zeros(self.r.size)
+        w = self.r>0.
+        self.mu[w] = self.rp[w]/self.r[w]
 
 
         self.pk = pk.pk(getattr(pk, dic_init['model']['model-pk']))
@@ -145,6 +167,10 @@ class data:
                 deg_mu_max = dic_bb['deg_mu_max']
                 ddeg_mu = dic_bb['ddeg_mu']
 
+                tbin_size_rp = bin_size_rp
+                if dic_bb['pre']=='pre':
+                    tbin_size_rp /= coef_binning_model
+
                 name = 'BB-{}-{} {} {} {}'.format(self.name,
                         ibb,dic_bb['type'],dic_bb['pre'],dic_bb['rp_rt'])
 
@@ -161,7 +187,7 @@ class data:
                     deg_r_max=deg_r_max, ddeg_r=ddeg_r,
                     deg_mu_min=deg_mu_min, deg_mu_max=deg_mu_max,
                     ddeg_mu=ddeg_mu,rp_rt = dic_bb['rp_rt']=='rp,rt',
-                    bin_size_rp=bin_size_rp, name=name)
+                    bin_size_rp=tbin_size_rp, name=name)
                 bb.name = name
 
                 self.bb[dic_bb['pre']+"-"+dic_bb['type']].append(bb)
@@ -171,13 +197,17 @@ class data:
                 ibb += size_bb
                 name = 'BB-{}-{}-{}'.format(self.name,ibb,dic_bb['func'])
 
+                tbin_size_rp = bin_size_rp
+                if dic_bb['pre']=='pre':
+                    tbin_size_rp /= coef_binning_model
+
                 for k in ['scale-sky','sigma-sky']:
                     if not name+'-'+k in dic_init['parameters']['values']:
-                        dic_init['parameters']['values'][name+'-'+k] = 0.
+                        dic_init['parameters']['values'][name+'-'+k] = 1.
                         dic_init['parameters']['errors']['error_'+name+'-'+k] = 0.01
 
                 bb = partial( getattr(xi, dic_bb['func']),
-                    bin_size_rp=bin_size_rp, bin_size_rt=bin_size_rt, name=name)
+                    bin_size_rp=tbin_size_rp, name=name)
 
                 bb.name = name
                 self.bb[dic_bb['pre']+'-'+dic_bb['type']].append(bb)
@@ -275,7 +305,10 @@ class data:
                         self.rp_met[(m1, m2)] = hmet[2]["RP_{}_{}".format(m1,m2)][:]
                         self.rt_met[(m1, m2)] = hmet[2]["RT_{}_{}".format(m1,m2)][:]
                         self.z_met[(m1, m2)] = hmet[2]["Z_{}_{}".format(m1,m2)][:]
-                        self.dm_met[(m1, m2)] = csr_matrix(hmet[2]["DM_{}_{}".format(m1,m2)][:])
+                        try:
+                            self.dm_met[(m1, m2)] = csr_matrix(hmet[2]["DM_{}_{}".format(m1,m2)][:])
+                        except ValueError:
+                            self.dm_met[(m1, m2)] = csr_matrix(hmet[3]["DM_{}_{}".format(m1,m2)][:])
 
             hmet.close()
 
@@ -324,11 +357,11 @@ class data:
 
         ## pos-distortion multiplicative
         for bb in self.bb['pos-mul']:
-            xi *= 1+bb(self.r, self.mu, **pars)
+            xi *= 1+bb(self.rsquare, self.musquare, **pars)
 
         ## pos-distortion additive
         for bb in self.bb['pos-add']:
-            xi += bb(self.r, self.mu, **pars)
+            xi += bb(self.rsquare, self.musquare, **pars)
 
         return xi
 
@@ -336,10 +369,13 @@ class data:
         xi_peak = self.xi_model(k, pk_lin-pksb_lin, pars)
 
         pars['SB'] = True
+        sigmaNL_par = pars['sigmaNL_par']
         sigmaNL_per = pars['sigmaNL_per']
-        pars['sigmaNL_per'] = 0
+        pars['sigmaNL_par'] = 0.
+        pars['sigmaNL_per'] = 0.
         xi_sb = self.xi_model(k, pksb_lin, pars)
         pars['SB'] = False
+        pars['sigmaNL_par'] = sigmaNL_par
         pars['sigmaNL_per'] = sigmaNL_per
 
         xi_full = pars['bao_amp']*xi_peak + xi_sb
