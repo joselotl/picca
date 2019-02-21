@@ -506,6 +506,7 @@ class delta(qso):
                 mean_resomat=sp.mean(resomat[nremove:-nremove,:],axis=0)
             except (KeyError, ValueError):
                 resomat = None
+                mean_resomat = None
 
             iv=iv.astype(float)   #to ensure the endianess is right for the fft
             diff=diff.astype(float)
