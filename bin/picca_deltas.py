@@ -457,7 +457,7 @@ if __name__ == '__main__':
                     if reso is None:
                         reso = d.ll*0
                     if args.use_resolution_matrix:
-                        resomat=d.reso_matrix
+                        resomat=d.reso_matrix.T
                     else:
                         resomat=d.ll*0
                     print(resomat)
