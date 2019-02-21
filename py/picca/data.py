@@ -484,11 +484,13 @@ class delta(qso):
             we = None
             co = None
             try:
-                n_resmat=head['RESMATN']
-                mean_resomat=[]
-                for i in range(n_resmat):
-                    mean_resomat.append(head['RESMAT{:d}'.format(i)])
-                mean_resomat=sp.array(mean_resomat)
+                mean_resomat=h['RESOMAT'][:]
+
+#                n_resmat=head['RESMATN']
+#                mean_resomat=[]
+#                for i in range(n_resmat):
+#                    mean_resomat.append(head['RESMAT{:d}'.format(i)])
+#                mean_resomat=sp.array(mean_resomat)
             except KeyError:
                 mean_resomat = None
 
@@ -559,7 +561,7 @@ class delta(qso):
         co = None
 
         return cls(thid,ra,dec,zqso,plate,mjd,fid,ll,we,co,de,order,
-                   iv,diff,m_SNR,m_reso,m_z,dll,mean_resomat)
+                   iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=mean_resomat,reso=reso)
 
     @staticmethod
     def from_image(f):

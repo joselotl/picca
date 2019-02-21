@@ -458,6 +458,9 @@ if __name__ == '__main__':
                         reso = d.ll*0
                     if args.use_resolution_matrix:
                         resomat=d.mean_reso_matrix
+                    else:
+                        resomat=d.ll*0
+                    print(resomat)
 
 #                        hd+=[{'name':'RESMATN','value':len(d.mean_reso_matrix),'comment':'lenghth of the mean resolution matrix'}]
 #                        for i,r in enumerate(d.mean_reso_matrix):
