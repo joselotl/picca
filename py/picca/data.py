@@ -488,7 +488,7 @@ class delta(qso):
             try:
                 resomat=h['RESOMAT'][:]
                 nremove=resomat.shape[0]//2
-                mean_resomat=sp.mean(reso_matrix[nremove:-nremove,:],axis=0)
+                mean_resomat=sp.mean(resomat[nremove:-nremove,:],axis=0)
             except KeyError:
                 resomat = None
 
@@ -508,6 +508,7 @@ class delta(qso):
             co = h['CONT'][:]
             mean_resomat = None
             reso = None
+            resomat = None
 
 
         thid = head['THING_ID']
