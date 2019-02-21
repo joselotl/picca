@@ -460,21 +460,20 @@ if __name__ == '__main__':
                         resomat=d.reso_matrix.T
                     else:
                         resomat=d.ll*0
-                    print(resomat)
-
 #                        hd+=[{'name':'RESMATN','value':len(d.mean_reso_matrix),'comment':'lenghth of the mean resolution matrix'}]
 #                        for i,r in enumerate(d.mean_reso_matrix):
 #                            hd+=[{'name':'RESMAT{:d}'.format(i),'value':r,'comment':'entry of the mean resolution matrix'}]
 
-                    cols=[d.ll,d.de,d.iv,diff,reso,resomat]
+                    cols=[d.ll,d.de,d.iv,diff]
                     names=['LOGLAM','DELTA','IVAR','DIFF']
                     units=['log Angstrom','','','','km/s','(pixel)']
                     comments = ['Log lambda','Delta field','Inverse variance',
                                 'Difference']
                     if args.use_resolution_matrix:
-                        names.append(['RESO','RESOMAT'])
-                        units.append(['km/s','(pixel)'])
-                        comments.append(['Resolution','Resolution matrix'])
+                        cols.extend([reso,resomat])
+                        names.extend(['RESO','RESOMAT'])
+                        units.extend(['km/s','(pixel)'])
+                        comments.extend(['Resolution','Resolution matrix'])
 
                 else :
                     cols=[d.ll,d.de,d.we,d.co]
