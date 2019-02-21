@@ -315,6 +315,8 @@ class forest(qso):
             self.diff = self.diff[w]
         if self.reso is not None:
             self.reso = self.reso[w]
+        if self.reso_matrix is not None:
+             self.reso_matrix = self.reso_matrix[:,w]
         if self.reso is not None :
             if self.reso_matrix is not None:
                 nremove=self.reso_matrix.shape[0]//2
@@ -339,6 +341,18 @@ class forest(qso):
             self.diff = self.diff[w]
         if self.reso is not None:
             self.reso = self.reso[w]
+        if self.reso_matrix is not None:
+             self.reso_matrix = self.reso_matrix[:,w]
+        if self.reso is not None :
+            if self.reso_matrix is not None:
+                nremove=self.reso_matrix.shape[0]//2
+                self.mean_reso = sp.mean(self.reso[nremove:-nremove]) #* constants.speed_light * 1000. * forest.dll * sp.log(10.0) #as I gave it reso_pix instead of km/s
+            else:
+                self.mean_reso = sp.mean(self.reso)
+            if self.reso_matrix is not None:
+                nremove=self.reso_matrix.shape[0]//2
+                self.mean_reso_matrix = sp.mean(self.reso_matrix[:,nremove:-nremove],axis=1)   #this might be extended by properly filtering out pixels where boundary effects play a role (instead of just removing 4 pixels on each side). This will also return an empty array for short spectra (and the FFT of this will be nan)
+
 
     def cont_fit(self):
         lmax = forest.lmax_rest+sp.log10(1+self.zqso)

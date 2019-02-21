@@ -457,15 +457,17 @@ if __name__ == '__main__':
                     if reso is None:
                         reso = d.ll*0
                     if args.use_resolution_matrix:
-                        hd+=[{'name':'RESMATN','value':len(d.mean_reso_matrix),'comment':'lenghth of the mean resolution matrix'}]
-                        for i,r in enumerate(d.mean_reso_matrix):
-                            hd+=[{'name':'RESMAT{:d}'.format(i),'value':r,'comment':'entry of the mean resolution matrix'}]
+                        resomat=d.mean_reso_matrix
 
-                    cols=[d.ll,d.de,d.iv,diff,reso]
-                    names=['LOGLAM','DELTA','IVAR','DIFF','RESO']
-                    units=['log Angstrom','','','','km/s']
+#                        hd+=[{'name':'RESMATN','value':len(d.mean_reso_matrix),'comment':'lenghth of the mean resolution matrix'}]
+#                        for i,r in enumerate(d.mean_reso_matrix):
+#                            hd+=[{'name':'RESMAT{:d}'.format(i),'value':r,'comment':'entry of the mean resolution matrix'}]
+
+                    cols=[d.ll,d.de,d.iv,diff,reso,resomat]
+                    names=['LOGLAM','DELTA','IVAR','DIFF','RESO','RESOMAT']
+                    units=['log Angstrom','','','','km/s','(pixel)']
                     comments = ['Log lambda','Delta field','Inverse variance',
-                                'Difference','Resolution']
+                                'Difference','Resolution','Resolution matrix']
                 else :
                     cols=[d.ll,d.de,d.we,d.co]
                     names=['LOGLAM','DELTA','WEIGHT','CONT']
