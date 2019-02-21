@@ -61,7 +61,7 @@ def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel,reso=None,reso_matrix=Non
         diff_arr.append(diff_part)
         iv_arr.append(iv_part)
         if reso is not None:
-            reso_arr.append(reso_in_km_per_s)
+            reso_arr.append(reso_part)
         if reso_matrix is not None:
             reso_matrix_arr.append(reso_matrix_part)
     return m_z_arr, ll_arr, de_arr, diff_arr, iv_arr, reso_arr, reso_matrix_arr
