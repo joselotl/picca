@@ -511,7 +511,11 @@ class delta(qso):
             diff=diff.astype(float)
             de=de.astype(float)
             ll=ll.astype(float)
-            reso=reso.astype(float)
+            if reso is not None:
+                reso=reso.astype(float)
+            if resomat is not None:
+                resomat=resomat.astype(float)
+
         else :
             iv = None
             diff = None
