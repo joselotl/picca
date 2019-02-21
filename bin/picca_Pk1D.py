@@ -248,7 +248,7 @@ if __name__ == '__main__':
                     resomat=d.mean_reso_matrix
                 else:
                     reso=sp.mean(reso_arr[ip])
-                    resomat=reso_matrix_arr[ip],axis=0) #should change this if the resolution matrix will ever be given in full and all ffts should be done
+                    resomat=sp.mean(reso_matrix_arr[ip],axis=0) #should change this if the resolution matrix will ever be given in full and all ffts should be done
                 if args.res_estimate == 'Gaussian':
                     cor_reso = compute_cor_reso(delta_pixel, reso, k)
                 elif args.res_estimate == 'matrix':
