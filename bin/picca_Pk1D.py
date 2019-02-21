@@ -305,7 +305,7 @@ if __name__ == '__main__':
                     hd = [ {'name':'RA','value':d.ra,'comment':"QSO's Right Ascension [degrees]"},
                         {'name':'DEC','value':d.dec,'comment':"QSO's Declination [degrees]"},
                         {'name':'Z','value':d.zqso,'comment':"QSO's redshift"},
-                        {'name':'MEANZ','value':m_z_arr[f],'comment':"Absorbers mean redshift"},
+                        {'name':'MEANZ','value':m_z_arr[ip],'comment':"Absorbers mean redshift"},
                         {'name':'MEANRESO','value':d.mean_reso,'comment':'Mean resolution [km/s]'},
                         {'name':'MEANSNR','value':d.mean_SNR,'comment':'Mean signal to noise ratio'},
                         {'name':'NBMASKPIX','value':nb_masked_pixel,'comment':'Number of masked pixels in the section'},
