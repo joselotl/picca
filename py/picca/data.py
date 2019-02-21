@@ -105,9 +105,10 @@ class forest(qso):
     ## resolution matrix for desi forests
     reso_matrix = None
     mean_reso_matrix = None
+    reso_pix = None
 
 
-    def __init__(self, ll, fl, iv, thid, ra, dec, zqso, plate, mjd, fid, order, diff=None, reso=None, mmef=None, reso_matrix=None):
+    def __init__(self, ll, fl, iv, thid, ra, dec, zqso, plate, mjd, fid, order, diff=None, reso=None, mmef=None, reso_matrix=None, reso_pix = None):
         qso.__init__(self, thid, ra, dec, zqso, plate, mjd, fid)
         if not self.ebv_map is None:
             corr = unred(10**ll,self.ebv_map[thid])
@@ -136,6 +137,8 @@ class forest(qso):
             reso = reso[w]
         if reso_matrix is not None:
             reso_matrix = reso_matrix[:, w]
+        if reso_pix is not None:
+            reso_pix = reso_pix[w]
 
         # rebin
         cll = forest.lmin + sp.arange(bins.max() + 1) * forest.dll
@@ -156,7 +159,8 @@ class forest(qso):
             for i, r in enumerate(reso_matrix):
                 # need to think about this, does rebinning even make sense for the resolution matrix, probably not, but to be able to get the following lines right this would be needed. And this is probably the best way if it is sensible at all, it might be necessary to compute everything in lambda instead of log(lambda) in the end
                 creso_matrix[i, :] = sp.bincount(bins, weights=iv * r)
-
+        if reso_pix is not None:
+            creso_pix = sp.bincount(bins, weights=iv * reso_pix)
         cfl[:len(ccfl)] += ccfl
         civ[:len(cciv)] += cciv
         if mmef is not None:
@@ -175,6 +179,8 @@ class forest(qso):
             reso = creso[w] / civ[w]
         if reso_matrix is not None:
             reso_matrix = creso_matrix[:, w] / civ[sp.newaxis, w]
+        if reso_pix is not None:
+            creso_pix = creso_pix[w] / civ[w]
 
 
 
@@ -197,6 +203,7 @@ class forest(qso):
         self.diff = diff
         self.reso = reso
         self.reso_matrix = reso_matrix
+        self.reso_pix = reso_pix
 #        else :
 #           self.diff = sp.zeros(len(ll))
 #           self.reso = sp.ones(len(ll))
@@ -254,6 +261,8 @@ class forest(qso):
         # recompute means of quality variables
         if self.reso is not None:
             self.mean_reso = self.reso.mean()
+        if self.reso_matrix is not None:
+            self.mean_reso_matrix = self.reso_matrix.mean(axis=1)
         err = 1./sp.sqrt(self.iv)
         SNR = self.fl/err
         self.mean_SNR = SNR.mean()
@@ -282,6 +291,8 @@ class forest(qso):
              self.reso = self.reso[w]
         if self.reso_matrix is not None:
              self.reso_matrix = self.reso_matrix[:,w]
+         if self.reso_pix is not None:
+              self.reso_pix = self.reso_pix[w]
         if self.reso is not None :
             if self.reso_matrix is not None:
                 nremove=self.reso_matrix.shape[0]//2
@@ -315,6 +326,8 @@ class forest(qso):
             self.diff = self.diff[w]
         if self.reso is not None:
             self.reso = self.reso[w]
+        if self.reso_pix is not None:
+            self.reso_pix = self.reso_pix[w]
         if self.reso_matrix is not None:
              self.reso_matrix = self.reso_matrix[:,w]
         if self.reso is not None :
@@ -343,6 +356,8 @@ class forest(qso):
             self.reso = self.reso[w]
         if self.reso_matrix is not None:
              self.reso_matrix = self.reso_matrix[:,w]
+        if self.reso_pix is not None:
+             self.reso_pix = self.reso_pix[w]
         if self.reso is not None :
             if self.reso_matrix is not None:
                 nremove=self.reso_matrix.shape[0]//2
@@ -459,7 +474,7 @@ class delta(qso):
 
         return cls(f.thid,f.ra,f.dec,f.zqso,f.plate,f.mjd,f.fid,ll,we,f.co,de,f.order,
                    iv,diff,f.mean_SNR,f.mean_reso,f.mean_z,f.dll,m_reso_matrix=f.mean_reso_matrix,
-                   reso=f.reso,reso_matrix=f.reso_matrix)
+                   reso=f.reso_pix,reso_matrix=f.reso_matrix)  #atm the resolution on a pixel basis is stored within the delta file
 
 
     @classmethod
