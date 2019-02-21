@@ -49,6 +49,9 @@ def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel,reso=None,reso_matrix=Non
         iv_part = iv_c[selection]
         if reso is not None:
             reso_part = reso_c[selection]
+            #the next two lines convert the resolution from pixel scale to km/s
+            dll_part=(ll_part[-1]-ll_part[0])/float(len(ll_part)-1)
+            reso_in_km_per_s = reso_part*constants.speed_light/1000.*dll*sp.log(10.0)
         if reso_matrix is not None:
             reso_matrix_part = reso_matrix_c[selection, :]
 
