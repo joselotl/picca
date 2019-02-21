@@ -131,7 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--res-estimate', default='Gaussian', required=False,
         help='Resolution correction estimated by: Gaussian, matrix, noresolution, pixel, nopixel')
 
-    parser.add_argument('--res-from-mean', action='store_false', default=True, required=False,
+    parser.add_argument('--res-from-vector', action='store_false', default=True, required=False,
             help='Should the resolution correction be based on the mean as stored in delta files? '
                  'Else it will be based on the resolution vector in the delta files, not backwards '
                  'compatible')
@@ -214,7 +214,7 @@ if __name__ == '__main__':
             # Split in n parts the forest
             nb_part_max = (len(d.ll)-first_pixel)//nb_pixel_min
             nb_part = min(args.nb_part,nb_part_max)
-            if args.res_from_mean:
+            if not args.res_from_vector:
                 m_z_arr,ll_arr,de_arr,diff_arr,iv_arr,_,_ =     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel)
             else:
                 m_z_arr,ll_arr,de_arr,diff_arr,iv_arr, reso_arr, reso_matrix_arr=     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,reso=d.reso,reso_matrix=d.reso_matrix)
@@ -243,7 +243,7 @@ if __name__ == '__main__':
 
                 # Compute resolution correction
                 delta_pixel = d.dll*sp.log(10.)*constants.speed_light/1000.
-                if args.res_from_mean:
+                if not args.res_from_vector:
                     reso=d.mean_reso
                     resomat=d.mean_reso_matrix
                 else:
