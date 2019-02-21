@@ -72,13 +72,13 @@ def spectral_resolution(wdisp,with_correction=None,fiber=None,ll=None) :
 def spectral_resolution_desi(reso_matrix, ll) :
 
     dll = sp.diff(ll,1)#(ll[-1]-ll[0])/float(len(ll)-1)
-    sp.append(dll,dll[-1]) #repeat the last value again, while this is wrong it shouldn't matter as it's only 1 pix and differences are small (but large enough along the full sightline)
+    dll = sp.append(dll,dll[-1]) #repeat the last value again, while this is wrong it shouldn't matter as it's only 1 pix and differences are small (but large enough along the full sightline)
     reso= sp.clip(reso_matrix,1.0e-6,1.0e6)
     rms_in_pixel = (sp.sqrt(1.0/2.0/sp.log(reso[len(reso)//2][:]/reso[len(reso)//2-1][:]))
                     + sp.sqrt(4.0/2.0/sp.log(reso[len(reso)//2][:]/reso[len(reso)//2-2][:]))
-#                    + sp.sqrt(1.0/2.0/sp.log(reso[len(reso)//2][:]/reso[len(reso)//2+1][:]))
-#                    + sp.sqrt(4.0/2.0/sp.log(reso[len(reso)//2][:]/reso[len(reso)//2+2][:]))
-#                    )/4.0
+                    + sp.sqrt(1.0/2.0/sp.log(reso[len(reso)//2][:]/reso[len(reso)//2+1][:]))
+                    + sp.sqrt(4.0/2.0/sp.log(reso[len(reso)//2][:]/reso[len(reso)//2+2][:]))
+                    )/4.0
                     )/2.0
     reso_in_km_per_s = rms_in_pixel*constants.speed_light/1000.*dll*sp.log(10.0)
 
