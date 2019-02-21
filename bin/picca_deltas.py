@@ -467,10 +467,15 @@ if __name__ == '__main__':
 #                            hd+=[{'name':'RESMAT{:d}'.format(i),'value':r,'comment':'entry of the mean resolution matrix'}]
 
                     cols=[d.ll,d.de,d.iv,diff,reso,resomat]
-                    names=['LOGLAM','DELTA','IVAR','DIFF','RESO','RESOMAT']
+                    names=['LOGLAM','DELTA','IVAR','DIFF']
                     units=['log Angstrom','','','','km/s','(pixel)']
                     comments = ['Log lambda','Delta field','Inverse variance',
-                                'Difference','Resolution','Resolution matrix']
+                                'Difference']
+                    if args.use_resolution_matrix:
+                        names.append(['RESO','RESOMAT'])
+                        units.append(['km/s','(pixel)'])
+                        comments.append(['Resolution','Resolution matrix'])
+
                 else :
                     cols=[d.ll,d.de,d.we,d.co]
                     names=['LOGLAM','DELTA','WEIGHT','CONT']
