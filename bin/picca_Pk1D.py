@@ -181,7 +181,7 @@ if __name__ == '__main__':
     sp.random.seed(4)
 
     # loop over input files
-    for i,f in enumerate(fi):
+    for i, f in enumerate(fi):
         if i%1==0:
             print("\rread {} of {} {}".format(i,len(fi),ndata),end="")
 
@@ -219,13 +219,13 @@ if __name__ == '__main__':
             else:
                 m_z_arr,ll_arr,de_arr,diff_arr,iv_arr, reso_arr, reso_matrix_arr=     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,reso=d.reso,reso_matrix=d.reso_matrix)
 
-            for f in range(nb_part):
+            for ip in range(nb_part):
                 # rebin diff spectrum
                 if (args.noise_estimate=='rebin_diff' or args.noise_estimate=='mean_rebin_diff'):
-                    diff_arr[f]=rebin_diff_noise(d.dll,ll_arr[f],diff_arr[f])
+                    diff_arr[ip]=rebin_diff_noise(d.dll,ll_arr[ip],diff_arr[ip])
 
                 # Fill masked pixels with 0.
-                ll_new,delta_new,diff_new,iv_new,nb_masked_pixel = fill_masked_pixels(d.dll,ll_arr[f],de_arr[f],diff_arr[f],iv_arr[f],args.no_apply_filling)
+                ll_new,delta_new,diff_new,iv_new,nb_masked_pixel = fill_masked_pixels(d.dll,ll_arr[ip],de_arr[ip],diff_arr[ip],iv_arr[ip],args.no_apply_filling)
                 if (nb_masked_pixel> args.nb_pixel_masked_max) : continue
                 if (args.out_format=='root' and  args.debug): compute_mean_delta(ll_new,delta_new,iv_new,d.zqso)
 
@@ -277,7 +277,7 @@ if __name__ == '__main__':
                 # save in root format
                 if (args.out_format=='root'):
                     zqso[0] = d.zqso
-                    mean_z[0] = m_z_arr[f]
+                    mean_z[0] = m_z_arr[ip]
                     mean_reso[0] = d.mean_reso
                     mean_SNR[0] = d.mean_SNR
                     lambda_min[0] =  sp.power(10.,ll_new[0])
