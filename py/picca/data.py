@@ -474,7 +474,7 @@ class delta(qso):
 
         return cls(f.thid,f.ra,f.dec,f.zqso,f.plate,f.mjd,f.fid,ll,we,f.co,de,f.order,
                    iv,diff,f.mean_SNR,f.mean_reso,f.mean_z,f.dll,m_reso_matrix=f.mean_reso_matrix,
-                   reso=f.reso_pix,reso_matrix=f.reso_matrix)  #atm the resolution on a pixel basis is stored within the delta file
+                   reso=f.reso,reso_matrix=f.reso_matrix) 
 
 
     @classmethod
