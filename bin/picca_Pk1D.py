@@ -136,6 +136,9 @@ if __name__ == '__main__':
                  'Else it will be based on the resolution vector in the delta files, not backwards '
                  'compatible')
 
+    parser.add_argument('--linear-binning', action='store_true', default = False,
+            help='should the deltas be computed on linearly sampled wavelength bins')
+
     args = parser.parse_args()
 
 #   Create root file
@@ -217,6 +220,12 @@ if __name__ == '__main__':
             if not args.res_from_vector:
                 m_z_arr,ll_arr,de_arr,diff_arr,iv_arr,_,_ =     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel)
             else:
+                if args.linear_binning:
+                    reso=d.reso_pix*d.dll
+                else:
+                    reso=d.reso
+                reso_matrix=d.reso_matrix
+
                 m_z_arr,ll_arr,de_arr,diff_arr,iv_arr, reso_arr, reso_matrix_arr=     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,reso=d.reso,reso_matrix=d.reso_matrix)
 
             for ip in range(nb_part):
@@ -225,34 +234,45 @@ if __name__ == '__main__':
                     diff_arr[ip]=rebin_diff_noise(d.dll,ll_arr[ip],diff_arr[ip])
 
                 # Fill masked pixels with 0.
-                ll_new,delta_new,diff_new,iv_new,nb_masked_pixel = fill_masked_pixels(d.dll,ll_arr[ip],de_arr[ip],diff_arr[ip],iv_arr[ip],args.no_apply_filling)
+                if not args.linear_binning:
+                    ll_new,delta_new,diff_new,iv_new,nb_masked_pixel = fill_masked_pixels(d.dll,ll_arr[ip],de_arr[ip],diff_arr[ip],iv_arr[ip],args.no_apply_filling)
+                else:
+                    ll_new,delta_new,diff_new,iv_new,nb_masked_pixel = fill_masked_pixels(d.dll,10**ll_arr[ip],de_arr[ip],diff_arr[ip],iv_arr[ip],args.no_apply_filling)
+                    #note that in this case ll_new is actually lambda not log(lambda) and dll is dlambda
                 if (nb_masked_pixel> args.nb_pixel_masked_max) : continue
                 if (args.out_format=='root' and  args.debug): compute_mean_delta(ll_new,delta_new,iv_new,d.zqso)
 
                 lam_lya = constants.absorber_IGM["LYA"]
-                z_abs =  sp.power(10.,ll_new)/lam_lya - 1.0
+                if not args.linear_binning:
+                    z_abs =  sp.power(10.,ll_new)/lam_lya - 1.0
+                else:
+                    z_abs =  ll_new/lam_lya - 1.0
                 mean_z_new = sum(z_abs)/float(len(z_abs))
 
                 # Compute Pk_raw
-                k,Pk_raw = compute_Pk_raw(d.dll,delta_new,ll_new)
+                k,Pk_raw = compute_Pk_raw(d.dll,delta_new,ll_new,linear_binning=args.linear_binning)
+
 
                 # Compute Pk_noise
                 run_noise = False
                 if (args.noise_estimate=='pipeline'): run_noise=True
-                Pk_noise,Pk_diff = compute_Pk_noise(d.dll,iv_new,diff_new,ll_new,run_noise)
+                Pk_noise,Pk_diff = compute_Pk_noise(d.dll,iv_new,diff_new,ll_new,run_noise,linear_binning=args.linear_binning)
 
                 # Compute resolution correction
-                delta_pixel = d.dll*sp.log(10.)*constants.speed_light/1000.
-                if not args.res_from_vector:
+                if not args.linear_binning:
+                    delta_pixel = d.dll*sp.log(10.)*constants.speed_light/1000.
+                else:
+                    delta_pixel = d.dll
+                if not args.res_from_vector and not args.linear_binning:
                     reso=d.mean_reso
                     resomat=d.mean_reso_matrix
                 else:
                     reso=sp.mean(reso_arr[ip])
-                    resomat=sp.mean(reso_matrix_arr[ip],axis=0) #should change this if the resolution matrix will ever be given in full and all ffts should be done
+                    resomat=sp.mean(reso_matrix_arr[ip], axis=0) #should change this if the resolution matrix will ever be given in full and all ffts should be done
                 if args.res_estimate == 'Gaussian':
                     cor_reso = compute_cor_reso(delta_pixel, reso, k)
                 elif args.res_estimate == 'matrix':
-                    cor_reso = compute_cor_reso_matrix(d.dll, resomat, ll_new)
+                    cor_reso = compute_cor_reso_matrix(d.dll, resomat, ll_new,linear_binning=args.linear_binning)
                 elif args.res_estimate == 'noresolution':
                     cor_reso = sp.ones(Pk_raw.shape)
                 elif args.res_estimate == 'pixel':
@@ -273,6 +293,10 @@ if __name__ == '__main__':
                     Pk = (Pk_raw - Pk_mean_diff)/cor_reso
                 elif (args.noise_estimate=='noiseless'):
                     Pk = Pk_raw / cor_reso
+
+                if args.linear_binning:
+                    Pk*=constants.speed_light/1000/sp.mean(sp.log(ll_new))
+                    k/=constants.speed_light/1000/sp.mean(sp.log(ll_new))
 
                 # save in root format
                 if (args.out_format=='root'):

@@ -106,6 +106,7 @@ class forest(qso):
     reso_matrix = None
     mean_reso_matrix = None
     reso_pix = None
+    linear_binning = None
 
 
     def __init__(self, ll, fl, iv, thid, ra, dec, zqso, plate, mjd, fid, order, diff=None, reso=None, mmef=None, reso_matrix=None, reso_pix = None):
@@ -115,8 +116,13 @@ class forest(qso):
             fl /= corr
             iv *= corr**2
         # cut to specified range
-        bins = sp.floor((ll - forest.lmin) / forest.dll + 0.5).astype(int)
-        ll = forest.lmin + bins * forest.dll
+        if not forest.linear_binning:
+            bins = sp.floor((ll - forest.lmin) / forest.dll + 0.5).astype(int)
+            ll = forest.lmin + bins * forest.dll
+        else:
+            self.dll=(10**ll[1]-10**ll[0])
+            bins=sp.floor((10**ll-10**forest.lmin) / self.dll +0.5).astype(int)
+            ll = 10**forest.lmin + bins * self.dll
         w = (ll >= forest.lmin)
         w = w & (ll < forest.lmax)
         w = w & (ll - sp.log10(1. + self.zqso) > forest.lmin_rest)
@@ -141,7 +147,10 @@ class forest(qso):
             reso_pix = reso_pix[w]
 
         # rebin
-        cll = forest.lmin + sp.arange(bins.max() + 1) * forest.dll
+        if not forest.linear_binning:
+            cll = forest.lmin + sp.arange(bins.max() + 1) * forest.dll
+        else:
+            cll = sp.log10(10**forest.lmin + sp.arange(bins.max() + 1) * self.dll)
         cfl = sp.zeros(bins.max() + 1)
         civ = sp.zeros(bins.max() + 1)
         if mmef is not None:
@@ -222,7 +231,7 @@ class forest(qso):
         SNR = fl/err
         self.mean_SNR = sp.mean(SNR)
         lam_lya = constants.absorber_IGM["LYA"]
-        self.mean_z = sp.mean([10.**ll[len(ll)-1], 10.**ll[0]])/lam_lya -1.0
+        self.mean_z = sp.mean([10.**ll[-1], 10.**ll[0]])/lam_lya -1.0
 
 
     def __add__(self,d):
@@ -243,8 +252,14 @@ class forest(qso):
         if self.reso is not None:
             dic['reso'] = sp.append(self.reso, d.reso)
 
-        bins = sp.floor((ll-forest.lmin)/forest.dll+0.5).astype(int)
-        cll = forest.lmin + sp.arange(bins.max()+1)*forest.dll
+        if not forest.linear_binning:
+            bins = sp.floor((ll-forest.lmin)/forest.dll+0.5).astype(int)
+            cll = forest.lmin + sp.arange(bins.max()+1)*forest.dll
+        else:
+            bins=sp.floor((10**ll-10**forest.lmin) / self.dll +0.5).astype(int)
+            cll = sp.log10(10**forest.lmin + sp.arange(bins.max()+1)*self.dll)
+
+
         civ = sp.zeros(bins.max()+1)
         cciv = sp.bincount(bins,weights=iv)
         civ[:len(cciv)] += cciv

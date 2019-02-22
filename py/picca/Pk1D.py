@@ -104,7 +104,6 @@ def fill_masked_pixels(dll,ll,delta,diff,iv,no_apply_filling):
 
     if no_apply_filling : return ll,delta,diff,iv,0
 
-
     ll_idx = ll.copy()
     ll_idx -= ll[0]
     ll_idx /= dll
@@ -120,6 +119,7 @@ def fill_masked_pixels(dll,ll,delta,diff,iv,no_apply_filling):
     ll_new *= dll
     ll_new += ll[0]
 
+
     diff_new = sp.zeros(len(index_all))
     diff_new[index_ok]=diff
 
@@ -131,10 +131,14 @@ def fill_masked_pixels(dll,ll,delta,diff,iv,no_apply_filling):
 
     return ll_new,delta_new,diff_new,iv_new,nb_masked_pixel
 
-def compute_Pk_raw(dll,delta,ll):
+def compute_Pk_raw(dll,delta,ll,linear_binning=False):
 
-    #   Length in km/s
-    length_lambda = dll*constants.speed_light/1000.*sp.log(10.)*len(delta)
+    if not linear_binning:
+        #   Length in km/s
+        length_lambda = dll*constants.speed_light/1000.*sp.log(10.)*len(delta)
+    else:
+        # length in A
+        length_lambda = dll*len(delta)
 
     # make 1D FFT
     nb_pixels = len(delta)
@@ -149,7 +153,7 @@ def compute_Pk_raw(dll,delta,ll):
     return k,Pk
 
 
-def compute_Pk_noise(dll,iv,diff,ll,run_noise):
+def compute_Pk_noise(dll,iv,diff,ll,run_noise,linear_binning=False):
 
     nb_pixels = len(iv)
     nb_bin_FFT = nb_pixels//2 + 1
@@ -164,12 +168,12 @@ def compute_Pk_noise(dll,iv,diff,ll,run_noise):
         for _ in range(nb_noise_exp):
             delta_exp= sp.zeros(nb_pixels)
             delta_exp[w] = sp.random.normal(0.,err[w])
-            _,Pk_exp = compute_Pk_raw(dll,delta_exp,ll)
+            _,Pk_exp = compute_Pk_raw(dll,delta_exp,ll,linear_binning=linear_binning)
             Pk += Pk_exp
 
         Pk /= float(nb_noise_exp)
 
-    _,Pk_diff = compute_Pk_raw(dll,diff,ll)
+    _,Pk_diff = compute_Pk_raw(dll,diff,ll,linear_binning=linear_binning)
 
     return Pk,Pk_diff
 
@@ -196,7 +200,7 @@ def compute_cor_reso_matrix(dll, mean_reso_matrix, ll):
     Perform the resolution + pixelization correction assuming general resolution kernel
      as e.g. DESI resolution matrix
     """
-    length_lambda_r = (10**ll[-1]-10**ll[0])#dll*sp.log(10.)*constants.speed_light/1000.
+    length_lambda_r = len(ll)*(10**ll[-1]-10**ll[0])#dll*sp.log(10.)*constants.speed_light/1000.
     length_lambda_v = dll*constants.speed_light/1000.*sp.log(10.)*len(ll)
 
     r=mean_reso_matrix

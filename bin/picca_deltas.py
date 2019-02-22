@@ -143,6 +143,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--use-resolution-matrix', action='store_true', default = False,
             help='should the resolution matrix be stored with the deltas (only implemented for Pk1D)')
+    parser.add_argument('--linear-binning', action='store_true', default = False,
+            help='should the deltas be computed on linearly sampled wavelength bins')
 
     args = parser.parse_args()
 
@@ -157,6 +159,8 @@ if __name__ == '__main__':
     ## minumum dla transmission
     forest.dla_mask = args.dla_mask
     forest.absorber_mask = args.absorber_mask
+    forest.linear_binning = args.linear_binning
+
 
     ### Find the redshift range
     if (args.zqso_min is None):
@@ -456,6 +460,9 @@ if __name__ == '__main__':
                     reso=d.reso
                     if reso is None:
                         reso = d.ll*0
+                    reso_pix=d.reso_pix
+                    if reso_pix is None:
+                        reso_pix = d.ll*0
                     if args.use_resolution_matrix:
                         resomat=d.reso_matrix.T
                     else:
@@ -470,10 +477,10 @@ if __name__ == '__main__':
                     comments = ['Log lambda','Delta field','Inverse variance',
                                 'Difference']
                     if args.use_resolution_matrix:
-                        cols.extend([reso,resomat])
-                        names.extend(['RESO','RESOMAT'])
-                        units.extend(['km/s','(pixel)'])
-                        comments.extend(['Resolution','Resolution matrix'])
+                        cols.extend([reso,resomat,reso_pix])
+                        names.extend(['RESO','RESOMAT','RESO_PIX'])
+                        units.extend(['km/s','(pixel)','(pixel)'])
+                        comments.extend(['Resolution','Resolution matrix','Resolution in pixel units'])
 
                 else :
                     cols=[d.ll,d.de,d.we,d.co]
