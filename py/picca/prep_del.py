@@ -6,16 +6,19 @@ from picca.utils import print
 
 ## mean continuum
 def mc(data):
-    nmc = int((forest.lmax_rest-forest.lmin_rest)*(1+d.zqso)/forest.dll)+1
+    if not forest.linear_binning:
+        nmc = int((forest.lmax_rest-forest.lmin_rest)/forest.dll)+1    #this doesn't work anymore on spectra binned in lambda as restframe wavelength differences are not the same anymore...
+    else:
+        nmc = int((forest.lmax_rest-forest.lmin_rest)/(forest.dll*(1+5)))+1    #this will only work for z<5
     mcont = sp.zeros(nmc)
     wcont = sp.zeros(nmc)
-    ll = forest.lmin_rest*(1+d.zqso) + (sp.arange(nmc)+.5)*(forest.lmax_rest-forest.lmin_rest)*(1+d.zqso)/nmc
+    ll = forest.lmin_rest + (sp.arange(nmc)+.5)*(forest.lmax_rest-forest.lmin_rest)/nmc
     for p in sorted(list(data.keys())):
         for d in data[p]:
             if not forest.linear_binning:
                 bins=((d.ll-forest.lmin_rest-sp.log10(1+d.zqso))/(forest.lmax_rest-forest.lmin_rest)*nmc).astype(int)
             else:
-                bins=((d.ll-forest.lmin_rest*(1+d.zqso))/(forest.lmax_rest-forest.lmin_rest)/(1+d.zqso)*nmc).astype(int)
+                bins=((d.ll/(1+d.zqso)-forest.lmin_rest)/(forest.lmax_rest-forest.lmin_rest)*nmc).astype(int)
             var_lss = forest.var_lss(d.ll)
             eta = forest.eta(d.ll)
             fudge = forest.fudge(d.ll)
