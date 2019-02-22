@@ -202,7 +202,8 @@ if __name__ == '__main__':
 
         # loop over deltas
         for d in dels:
-
+            if linear_binning:
+                d.ll=sp.log10(d.ll)
             # Selection over the SNR and the resolution
             if (d.mean_SNR<=args.SNR_min or d.mean_reso>=args.reso_max) : continue
 

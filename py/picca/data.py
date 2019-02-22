@@ -116,13 +116,12 @@ class forest(qso):
             fl /= corr
             iv *= corr**2
         # cut to specified range
-        if not forest.linear_binning:
-            bins = sp.floor((ll - forest.lmin) / forest.dll + 0.5).astype(int)
-            ll = forest.lmin + bins * forest.dll
-        else:
-            self.dll=(10**ll[1]-10**ll[0])
-            bins=sp.floor((10**ll-10**forest.lmin) / self.dll +0.5).astype(int)
-            ll = 10**forest.lmin + bins * self.dll
+        if forest.linear_binning:
+            ll=10**ll
+            self.dll=ll[1]-ll[0]
+        bins = sp.floor((ll - forest.lmin) / forest.dll + 0.5).astype(int)
+        ll = forest.lmin + bins * forest.dll
+
         w = (ll >= forest.lmin)
         w = w & (ll < forest.lmax)
         w = w & (ll - sp.log10(1. + self.zqso) > forest.lmin_rest)
@@ -147,10 +146,7 @@ class forest(qso):
             reso_pix = reso_pix[w]
 
         # rebin
-        if not forest.linear_binning:
-            cll = forest.lmin + sp.arange(bins.max() + 1) * forest.dll
-        else:
-            cll = sp.log10(10**forest.lmin + sp.arange(bins.max() + 1) * self.dll)
+        cll = forest.lmin + sp.arange(bins.max() + 1) * forest.dll
         cfl = sp.zeros(bins.max() + 1)
         civ = sp.zeros(bins.max() + 1)
         if mmef is not None:
@@ -252,12 +248,8 @@ class forest(qso):
         if self.reso is not None:
             dic['reso'] = sp.append(self.reso, d.reso)
 
-        if not forest.linear_binning:
-            bins = sp.floor((ll-forest.lmin)/forest.dll+0.5).astype(int)
-            cll = forest.lmin + sp.arange(bins.max()+1)*forest.dll
-        else:
-            bins=sp.floor((10**ll-10**forest.lmin) / self.dll +0.5).astype(int)
-            cll = sp.log10(10**forest.lmin + sp.arange(bins.max()+1)*self.dll)
+        bins = sp.floor((ll-forest.lmin)/forest.dll+0.5).astype(int)
+        cll = forest.lmin + sp.arange(bins.max()+1)*forest.dll
 
 
         civ = sp.zeros(bins.max()+1)
@@ -328,8 +320,12 @@ class forest(qso):
 
         w = (self.T_dla>forest.dla_mask)
         if not mask is None:
-            for l in mask:
-                w = w & ( (self.ll-sp.log10(1.+zabs)<l[0]) | (self.ll-sp.log10(1.+zabs)>l[1]) )
+            if not self.linear_binning:
+                for l in mask:
+                    w = w & ( (self.ll-sp.log10(1.+zabs)<l[0]) | (self.ll-sp.log10(1.+zabs)>l[1]) )
+            else:
+                for l in mask:
+                    w = w & ( (self.ll/(1.+zabs)<l[0]) | (self.ll/(1.+zabs)>l[1]) )
 
         self.iv = self.iv[w]
         self.ll = self.ll[w]
@@ -344,7 +340,7 @@ class forest(qso):
         if self.reso_pix is not None:
             self.reso_pix = self.reso_pix[w]
         if self.reso_matrix is not None:
-             self.reso_matrix = self.reso_matrix[:,w]
+            self.reso_matrix = self.reso_matrix[:,w]
         if self.reso is not None :
             if self.reso_matrix is not None:
                 nremove=self.reso_matrix.shape[0]//2
@@ -360,7 +356,10 @@ class forest(qso):
             return
 
         w = sp.ones(self.ll.size, dtype=bool)
-        w &= sp.fabs(1.e4*(self.ll-sp.log10(lambda_absorber)))>forest.absorber_mask
+        if not self.linear_binning:
+            w &= sp.fabs(1.e4*(self.ll-sp.log10(lambda_absorber)))>forest.absorber_mask
+        else:
+            w &= sp.fabs(1.e4*(sp.log10(self.ll)-sp.log10(lambda_absorber)))>forest.absorber_mask
 
         self.iv = self.iv[w]
         self.ll = self.ll[w]
@@ -385,12 +384,20 @@ class forest(qso):
 
 
     def cont_fit(self):
-        lmax = forest.lmax_rest+sp.log10(1+self.zqso)
-        lmin = forest.lmin_rest+sp.log10(1+self.zqso)
-        try:
-            mc = forest.mean_cont(self.ll-sp.log10(1+self.zqso))
-        except ValueError:
-            raise Exception
+        if not self.linear_binning:
+            lmax = forest.lmax_rest+sp.log10(1+self.zqso)
+            lmin = forest.lmin_rest+sp.log10(1+self.zqso)
+            try:
+                mc = forest.mean_cont(self.ll-sp.log10(1+self.zqso))
+            except ValueError:
+                raise Exception
+        else:
+            lmax = forest.lmax_rest*(1+self.zqso)
+            lmin = forest.lmin_rest*(1+self.zqso)
+            try:
+                mc = forest.mean_cont(self.ll/(1+self.zqso))
+            except ValueError:
+                raise Exception
 
         if not self.T_dla is None:
             mc*=self.T_dla
@@ -447,7 +454,7 @@ class forest(qso):
 
 class delta(qso):
 
-    def __init__(self,thid,ra,dec,zqso,plate,mjd,fid,ll,we,co,de,order,iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=None,reso=None,reso_matrix=None):
+    def __init__(self,thid,ra,dec,zqso,plate,mjd,fid,ll,we,co,de,order,iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=None,reso=None,reso_matrix=None,reso_pix=None,linear_binning=False):
 
         qso.__init__(self,thid,ra,dec,zqso,plate,mjd,fid)
         self.ll = ll
@@ -464,7 +471,8 @@ class delta(qso):
         self.mean_reso_matrix = m_reso_matrix
         self.reso = reso
         self.reso_matrix = reso_matrix
-
+        self.reso_pix = reso_pix
+        self.linear_binning = linear_binning
 
     @classmethod
     def from_forest(cls,f,st,var_lss,eta,fudge,mc=False):
@@ -489,7 +497,7 @@ class delta(qso):
 
         return cls(f.thid,f.ra,f.dec,f.zqso,f.plate,f.mjd,f.fid,ll,we,f.co,de,f.order,
                    iv,diff,f.mean_SNR,f.mean_reso,f.mean_z,f.dll,m_reso_matrix=f.mean_reso_matrix,
-                   reso=f.reso,reso_matrix=f.reso_matrix)
+                   reso=f.reso,reso_matrix=f.reso_matrix,reso_pix=f.reso_pix,linear_binning=f.linear_binning)
 
 
     @classmethod
@@ -513,6 +521,10 @@ class delta(qso):
                 reso=h['RESO'][:]
             except (KeyError, ValueError):
                 reso=None
+            try:
+                reso_pix=h['RESO_PIX'][:]
+            except (KeyError, ValueError):
+                reso_pix=None
             we = None
             co = None
             try:
@@ -531,7 +543,8 @@ class delta(qso):
                 reso=reso.astype(float)
             if resomat is not None:
                 resomat=resomat.astype(float)
-
+            if reso_pix is not None:
+                reso_pix=reso_pix.astype(float)
         else :
             iv = None
             diff = None
@@ -559,7 +572,7 @@ class delta(qso):
         except KeyError:
             order = 1
         return cls(thid,ra,dec,zqso,plate,mjd,fid,ll,we,co,de,order,
-                   iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=mean_resomat,reso=reso,reso_matrix=resomat)
+                   iv,diff,m_SNR,m_reso,m_z,dll,m_reso_matrix=mean_resomat,reso=reso,reso_matrix=resomat,reso_pix=reso_pix)
 
 
     @classmethod

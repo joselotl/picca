@@ -144,18 +144,23 @@ if __name__ == '__main__':
     parser.add_argument('--use-resolution-matrix', action='store_true', default = False,
             help='should the resolution matrix be stored with the deltas (only implemented for Pk1D)')
     parser.add_argument('--linear-binning', action='store_true', default = False,
-            help='should the deltas be computed on linearly sampled wavelength bins')
+            help='should the deltas be computed on linearly sampled wavelength bins (still using loglam for labelling, only compatible with Pk1d)')
 
     args = parser.parse_args()
 
-    ## init forest class
-
-    forest.lmin = sp.log10(args.lambda_min)
-    forest.lmax = sp.log10(args.lambda_max)
-    forest.lmin_rest = sp.log10(args.lambda_rest_min)
-    forest.lmax_rest = sp.log10(args.lambda_rest_max)
+    ## init forest class  #for linear binning this could be changed to sth more reasonable
+    if not args.linear_binning:
+        forest.lmin = sp.log10(args.lambda_min)
+        forest.lmax = sp.log10(args.lambda_max)
+        forest.lmin_rest = sp.log10(args.lambda_rest_min)
+        forest.lmax_rest = sp.log10(args.lambda_rest_max)
+    else:
+        forest.lmin = args.lambda_min
+        forest.lmax = args.lambda_max
+        forest.lmin_rest = args.lambda_rest_min
+        forest.lmax_rest = args.lambda_rest_max
     forest.rebin = args.rebin
-    forest.dll = args.rebin*1e-4
+    forest.dll = args.rebin*1e-4    #could set this to a useful value for linear binning, atm just read off the mock wavelength vector in that case
     ## minumum dla transmission
     forest.dla_mask = args.dla_mask
     forest.absorber_mask = args.absorber_mask
@@ -188,7 +193,10 @@ if __name__ == '__main__':
             ll_st = vac[1]['loglam'][:]
             st    = vac[1]['stack'][:]
             w     = (st!=0.)
-            forest.correc_flux = interp1d(ll_st[w],st[w],fill_value="extrapolate",kind="nearest")
+            if not args.linear_binning:
+                forest.correc_flux = interp1d(ll_st[w],st[w],fill_value="extrapolate",kind="nearest")
+            else:
+                interp1d(10**ll_st[w],st[w],fill_value="extrapolate",kind="nearest")
             vac.close()
         except:
             print(" Error while reading flux_calib file {}".format(args.flux_calib))
@@ -200,7 +208,10 @@ if __name__ == '__main__':
             vac = fitsio.FITS(args.ivar_calib)
             ll  = vac[2]['LOGLAM'][:]
             eta = vac[2]['ETA'][:]
-            forest.correc_ivar = interp1d(ll,eta,fill_value="extrapolate",kind="nearest")
+            if not args.linear_binning:
+                forest.correc_ivar = interp1d(ll,eta,fill_value="extrapolate",kind="nearest")
+            else:
+                forest.correc_ivar = interp1d(10**ll,eta,fill_value="extrapolate",kind="nearest")
             vac.close()
         except:
             print(" Error while reading ivar_calib file {}".format(args.ivar_calib))
@@ -243,9 +254,14 @@ if __name__ == '__main__':
                         usr_mask_RF_DLA += [ [float(l[1]),float(l[2])] ]
                     else:
                         raise
-            usr_mask_obs    = sp.log10(sp.asarray(usr_mask_obs))
-            usr_mask_RF     = sp.log10(sp.asarray(usr_mask_RF))
-            usr_mask_RF_DLA = sp.log10(sp.asarray(usr_mask_RF_DLA))
+
+            sr_mask_obs = sp.asarray(usr_mask_obs)
+            usr_mask_RF     = sp.asarray(usr_mask_RF)
+            usr_mask_RF_DLA = sp.asarray(usr_mask_RF_DLA)
+            if not args.linear_binning:
+                usr_mask_obs    = sp.log10(usr_mask_obs)
+                usr_mask_RF     = sp.log10(usr_mask_RF)
+                usr_mask_RF_DLA = sp.log10(usr_mask_RF_DLA)
             if usr_mask_RF_DLA.size==0:
                 usr_mask_RF_DLA = None
 
@@ -410,7 +426,7 @@ if __name__ == '__main__':
             for d in deltas[p]:
                 nbpixel = len(d.de)
                 dll = d.dll
-                if (args.mode=='desi') : dll = (d.ll[-1]-d.ll[0])/float(len(d.ll)-1)
+                if (args.mode=='desi') and not args.linear_binning: dll = (d.ll[-1]-d.ll[0])/float(len(d.ll)-1)
                 line = '{} {} {} '.format(d.plate,d.mjd,d.fid)
                 line += '{} {} {} '.format(d.ra,d.dec,d.zqso)
                 line += '{} {} {} {} {} '.format(d.mean_z,d.mean_SNR,d.mean_reso,dll,nbpixel)
@@ -451,7 +467,7 @@ if __name__ == '__main__':
 #                    import ipdb; ipdb.set_trace()
 
                     dll = d.dll
-                    if (args.mode=='desi'):
+                    if (args.mode=='desi' and not args.linear_binning):
                         dll = (d.ll[-1]-d.ll[0])/float(len(d.ll)-1)
                     hd += [{'name':'DLL','value':dll,'comment':'Loglam bin size [log Angstrom]'}]
                     diff = d.diff
