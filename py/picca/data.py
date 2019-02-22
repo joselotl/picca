@@ -230,7 +230,10 @@ class forest(qso):
         SNR = fl/err
         self.mean_SNR = sp.mean(SNR)
         lam_lya = constants.absorber_IGM["LYA"]
-        self.mean_z = sp.mean([10.**ll[-1], 10.**ll[0]])/lam_lya -1.0
+        if not forest.linear_binning:
+            self.mean_z = sp.mean([10.**ll[-1], 10.**ll[0]])/lam_lya -1.0
+        else:
+            self.mean_z = sp.mean([ll[-1], ll[0]])/lam_lya -1.0
 
 
     def __add__(self,d):
