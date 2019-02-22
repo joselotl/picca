@@ -123,8 +123,12 @@ class forest(qso):
 
         w = (ll >= forest.lmin)
         w = w & (ll < forest.lmax)
-        w = w & (ll - sp.log10(1. + self.zqso) > forest.lmin_rest)
-        w = w & (ll - sp.log10(1. + self.zqso) < forest.lmax_rest)
+        if not forest.linear_binning:
+            w = w & (ll - sp.log10(1. + self.zqso) > forest.lmin_rest)
+            w = w & (ll - sp.log10(1. + self.zqso) < forest.lmax_rest)
+        else:
+            w = w & (ll / (1. + self.zqso) > forest.lmin_rest)
+            w = w & (ll / (1. + self.zqso) < forest.lmax_rest)
         w = w & (iv > 0.)
         if w.sum() == 0:
             return
