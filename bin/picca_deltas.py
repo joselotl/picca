@@ -142,7 +142,7 @@ if __name__ == '__main__':
             help='use the mock continuum for computing the deltas')
 
     parser.add_argument('--use-resolution-matrix', action='store_true', default = False,
-            help='should the resolution matrix be stored with the deltas (only implemented for Pk1D_ascii)')
+            help='should the resolution matrix be stored with the deltas (only implemented for Pk1D)')
 
     args = parser.parse_args()
 
