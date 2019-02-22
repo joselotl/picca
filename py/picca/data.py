@@ -118,8 +118,6 @@ class forest(qso):
         # cut to specified range
         if forest.linear_binning:
             ll=10**ll
-            self.dll=ll[1]-ll[0]
-            print(self.dll)
         bins = sp.floor((ll - forest.lmin) / forest.dll + 0.5).astype(int)
         ll = forest.lmin + bins * forest.dll
 

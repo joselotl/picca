@@ -160,7 +160,11 @@ if __name__ == '__main__':
         forest.lmin_rest = args.lambda_rest_min
         forest.lmax_rest = args.lambda_rest_max
     forest.rebin = args.rebin
-    forest.dll = args.rebin*1e-4    #could set this to a useful value for linear binning, atm just read off the mock wavelength vector in that case
+    if not args.linear_binning:
+        forest.dll = args.rebin*1e-4
+    else:
+        forest.dll = 1e
+            
     ## minumum dla transmission
     forest.dla_mask = args.dla_mask
     forest.absorber_mask = args.absorber_mask
