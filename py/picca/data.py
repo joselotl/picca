@@ -556,6 +556,7 @@ class delta(qso):
             mean_resomat = None
             reso = None
             resomat = None
+            reso_pix = None
 
 
         thid = head['THING_ID']
