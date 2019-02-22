@@ -163,8 +163,8 @@ if __name__ == '__main__':
     if not args.linear_binning:
         forest.dll = args.rebin*1e-4
     else:
-        forest.dll = 1e
-            
+        forest.dll = 1.
+
     ## minumum dla transmission
     forest.dla_mask = args.dla_mask
     forest.absorber_mask = args.absorber_mask
