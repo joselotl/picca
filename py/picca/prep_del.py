@@ -12,7 +12,10 @@ def mc(data):
     ll = forest.lmin_rest + (sp.arange(nmc)+.5)*(forest.lmax_rest-forest.lmin_rest)/nmc
     for p in sorted(list(data.keys())):
         for d in data[p]:
-            bins=((d.ll-forest.lmin_rest-sp.log10(1+d.zqso))/(forest.lmax_rest-forest.lmin_rest)*nmc).astype(int)
+            if not forest.linear_binning:
+                bins=((d.ll-forest.lmin_rest-sp.log10(1+d.zqso))/(forest.lmax_rest-forest.lmin_rest)*nmc).astype(int)
+            else:
+                bins=((d.ll-forest.lmin_rest*(1+d.zqso))/(forest.lmax_rest-forest.lmin_rest)*nmc).astype(int)
             var_lss = forest.var_lss(d.ll)
             eta = forest.eta(d.ll)
             fudge = forest.fudge(d.ll)
@@ -150,4 +153,3 @@ def stack(data,delta=False):
     w=wst>0
     st[w]/=wst[w]
     return ll,st, wst
-
