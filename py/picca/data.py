@@ -280,7 +280,11 @@ class forest(qso):
         SNR = self.fl/err
         self.mean_SNR = SNR.mean()
         lam_lya = constants.absorber_IGM["LYA"]
-        self.mean_z = (sp.power(10.,ll[len(ll)-1])+sp.power(10.,ll[0]))/2./lam_lya -1.0
+        if not self.linear_binning:
+            self.mean_z = (sp.power(10.,ll[len(ll)-1])+sp.power(10.,ll[0]))/2./lam_lya -1.0
+        else:
+            self.mean_z = (ll[-1]+ll[0])/2./lam_lya -1.0
+
         return self
 
     def mask(self,mask_obs,mask_RF):
