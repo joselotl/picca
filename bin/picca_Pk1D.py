@@ -203,7 +203,7 @@ if __name__ == '__main__':
         # loop over deltas
         for d in dels:
             if args.linear_binning:
-                d.ll=sp.log10(d.ll)
+                d.ll=sp.log10(d.ll)    #put everything to log lambda such that routines here work without changes, will convert back later
             # Selection over the SNR and the resolution
             if (d.mean_SNR<=args.SNR_min or d.mean_reso>=args.reso_max) : continue
 
@@ -231,8 +231,8 @@ if __name__ == '__main__':
 
             for ip in range(nb_part):
                 # rebin diff spectrum
-                if (args.noise_estimate=='rebin_diff' or args.noise_estimate=='mean_rebin_diff'):
-                    diff_arr[ip]=rebin_diff_noise(d.dll,ll_arr[ip],diff_arr[ip])
+                if (args.noise_estimate=='rebin_diff' or args.noise_estimate=='mean_rebin_diff' and not args.linear_binning):
+                    diff_arr[ip]=rebin_diff_noise(d.dll,ll_arr[ip],diff_arr[ip])        #this doesnt work on linear binning yet
 
                 # Fill masked pixels with 0.
                 if not args.linear_binning:
@@ -295,9 +295,9 @@ if __name__ == '__main__':
                 elif (args.noise_estimate=='noiseless'):
                     Pk = Pk_raw / cor_reso
 
-                if args.linear_binning:
-                    Pk*=constants.speed_light/1000/sp.mean(sp.log(ll_new))
-                    k/=constants.speed_light/1000/sp.mean(sp.log(ll_new))
+                #if args.linear_binning:
+                #    Pk*=constants.speed_light/1000/sp.mean(sp.log(ll_new))
+                #    k/=constants.speed_light/1000/sp.mean(sp.log(ll_new))
 
                 # save in root format
                 if (args.out_format=='root'):
