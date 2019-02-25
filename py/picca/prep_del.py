@@ -9,7 +9,7 @@ def mc(data):
     if not forest.linear_binning:
         nmc = int((forest.lmax_rest-forest.lmin_rest)/forest.dll)+1    #this doesn't work anymore on spectra binned in lambda as restframe wavelength differences are not the same anymore...
     else:
-        nmc = int((forest.lmax_rest-forest.lmin_rest)/(forest.dll*(1+5)))+1    #this will only work for z<5
+        nmc = int((forest.lmax_rest-forest.lmin_rest)/(forest.dll*(1+2.1)))+1   
     mcont = sp.zeros(nmc)
     wcont = sp.zeros(nmc)
     ll = forest.lmin_rest + (sp.arange(nmc)+.5)*(forest.lmax_rest-forest.lmin_rest)/nmc
