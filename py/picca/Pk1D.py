@@ -204,10 +204,9 @@ def compute_cor_reso_matrix(dll, reso_matrix, ll, linear_binning=False):
     Perform the resolution + pixelization correction assuming general resolution kernel
      as e.g. DESI resolution matrix
     """
-    r=mean_reso_matrix
     if len(reso_matrix.shape)==1:
         #assume you got a mean reso_matrix
-        reso_matrix=reso_matrix[np.newaxis,:]
+        reso_matrix=reso_matrix[sp.newaxis,:]
 
     W2arr=[]
     for resmat in reso_matrix:
