@@ -199,43 +199,58 @@ def compute_cor_reso(delta_pixel, mean_reso, k):
     return cor
 
 
-def compute_cor_reso_matrix(dll, mean_reso_matrix, ll, linear_binning=False):
+def compute_cor_reso_matrix(dll, reso_matrix, ll, linear_binning=False):
     """
     Perform the resolution + pixelization correction assuming general resolution kernel
      as e.g. DESI resolution matrix
     """
-    length_lambda_r = len(ll)*(10**ll[-1]-10**ll[0])#dll*sp.log(10.)*constants.speed_light/1000.
-    length_lambda_v = dll*constants.speed_light/1000.*sp.log(10.)*len(ll)
-
     r=mean_reso_matrix
-    r=sp.append(r, sp.zeros(ll.size-mean_reso_matrix.size))
+    if len(reso_matrix.shape)==1:
+        #assume you got a mean reso_matrix
+        reso_matrix=reso_matrix[np.newaxis,:]
 
-    # make 1D FFT
-    nb_pixels = len(r)
-    nb_bin_FFT = nb_pixels//2 + 1
-    fft_a = fft(r)
+    W2arr=[]
+    for resmat in reso_matrix:
+        r=sp.append(resmat, sp.zeros(ll.size-resmat.size))
+        if linear_binning:
+            k,W2=compute_Pk_raw(dll, r, ll, linear_binning)
+            W2/=W2[0]
+            W2arr.append(W2)
 
-    # compute window correction in 1/wavelength bins
-    fft_a = fft_a[:nb_bin_FFT]
-    W2_r = (fft_a.real**2+fft_a.imag**2)*length_lambda_r/nb_pixels**2
-    W2_r /= W2_r[0]
-    k_r = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_r
+        else:
+            #something in here is extremely weird
+            length_lambda_r = len(ll)*(ll[-1]-ll[0])#dll*sp.log(10.)*constants.speed_light/1000.
+            length_lambda_v = dll*constants.speed_light/1000.*sp.log(10.)*len(ll)
 
-    #convert k-bins to velocity space
-    k_v=k_r/(constants.speed_light/1000.)*10**sp.mean(ll)
+            # make 1D FFT
+            nb_pixels = len(r)
+            nb_bin_FFT = nb_pixels//2 + 1
+            fft_a = fft(r)
 
-    #define output k array (could be an argument instead)
-    k = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_v
-    #interpolate to output k array
-    sqneglogW=sp.sqrt(-sp.log(W2_r)) #as W is close to gaussian in k, this will be close to linear in k
-    W2_int=spint.interp1d(k_v, sqneglogW, fill_value=(1,0),bounds_error=False)
-    Wres2=sp.exp(-W2_int(k)**2)
+            # compute window correction in 1/wavelength bins
+            fft_a = fft_a[:nb_bin_FFT]
+            W2_r = (fft_a.real**2+fft_a.imag**2)*length_lambda_r/nb_pixels**2
+            W2_r /= W2_r[0]
+            k_r = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_r
 
 
-    sinc = sp.ones(nb_bin_FFT)
+            #convert k-bins to velocity space
+            k_v=k_r/(constants.speed_light/1000.)*10**sp.mean(ll)
+            #define output k array (could be an argument instead)
+            k = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_v
+
+            #interpolate to output k array
+            sqneglogW=sp.sqrt(-sp.log(W2_r)) #as W is close to gaussian in k, this will be close to linear in k
+            W2_int=spint.interp1d(k_v, sqneglogW, fill_value=(1,0),bounds_error=False)
+            Wres2=sp.exp(-W2_int(k)**2)
+            W2arr.append(Wres2)
+
+        Wres2=np.mean(W2arr,axis=0)
+
+    sinc = sp.ones(len(k))
     sinc[k > 0.] = (sp.sin(k[k > 0.] * length_lambda_v / len(ll) / 2.0) /
                     (k[k > 0.] * length_lambda_v / len(ll) / 2.0))**2
-    cor = sp.ones(nb_bin_FFT)
+    cor = sp.ones(len(k))
     cor *= Wres2
     cor *= sinc
     return cor
