@@ -245,7 +245,7 @@ def compute_cor_reso_matrix(dll, reso_matrix, ll, linear_binning=False):
             W2arr.append(Wres2)
 
         Wres2=sp.mean(W2arr,axis=0)
-
+    raise
     sinc = sp.ones(len(k))
     sinc[k > 0.] = (sp.sin(k[k > 0.] * length_lambda_v / len(ll) / 2.0) /
                     (k[k > 0.] * length_lambda_v / len(ll) / 2.0))**2
