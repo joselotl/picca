@@ -195,7 +195,7 @@ def compute_cor_reso(delta_pixel, mean_reso, k):
     return cor
 
 
-def compute_cor_reso_matrix(dll, mean_reso_matrix, ll):
+def compute_cor_reso_matrix(dll, mean_reso_matrix, ll, linear_binning=False):
     """
     Perform the resolution + pixelization correction assuming general resolution kernel
      as e.g. DESI resolution matrix
