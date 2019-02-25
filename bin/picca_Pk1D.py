@@ -227,7 +227,7 @@ if __name__ == '__main__':
                     reso=d.reso
                 reso_matrix=d.reso_matrix
 
-                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr, reso_arr, reso_matrix_arr=     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,reso=d.reso,reso_matrix=d.reso_matrix)
+                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr, reso_arr, reso_matrix_arr=     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,reso=reso,reso_matrix=reso_matrix)
 
             for ip in range(nb_part):
                 # rebin diff spectrum
@@ -295,9 +295,9 @@ if __name__ == '__main__':
                 elif (args.noise_estimate=='noiseless'):
                     Pk = Pk_raw / cor_reso
 
-                #if args.linear_binning:
-                #    Pk*=constants.speed_light/1000/sp.mean(sp.log(ll_new))
-                #    k/=constants.speed_light/1000/sp.mean(sp.log(ll_new))
+                if args.linear_binning:
+                    Pk*=constants.speed_light/1000/sp.mean(sp.log(ll_new))
+                    k/=constants.speed_light/1000/sp.mean(sp.log(ll_new))
 
                 # save in root format
                 if (args.out_format=='root'):
