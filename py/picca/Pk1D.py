@@ -8,7 +8,7 @@ from picca.utils import print
 import scipy.interpolate as spint
 
 
-def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel,reso=None,reso_matrix=None):
+def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel,reso=None,reso_matrix=None,linear_binning=False):
 
     ll_limit=[ll[first_pixel]]
     nb_bin= (len(ll)-first_pixel)//nb_part
@@ -53,7 +53,11 @@ def split_forest(nb_part,dll,ll,de,diff,iv,first_pixel,reso=None,reso_matrix=Non
             reso_matrix_part = reso_matrix_c[selection, :]
 
         lam_lya = constants.absorber_IGM["LYA"]
-        m_z = (sp.power(10.,ll_part[len(ll_part)-1])+sp.power(10.,ll_part[0]))/2./lam_lya -1.0
+        if not linear_binning:
+            m_z = (sp.power(10.,ll_part[len(ll_part)-1])+sp.power(10.,ll_part[0]))/2./lam_lya -1.0
+        else:
+            m_z = (ll_part[-1]+ll_part[0])/2./lam_lya -1.0
+
 
         m_z_arr.append(m_z)
         ll_arr.append(ll_part)

@@ -202,14 +202,16 @@ if __name__ == '__main__':
 
         # loop over deltas
         for d in dels:
-            if args.linear_binning:
-                d.ll=sp.log10(d.ll)    #put everything to log lambda such that routines here work without changes, will convert back later
             # Selection over the SNR and the resolution
             if (d.mean_SNR<=args.SNR_min or d.mean_reso>=args.reso_max) : continue
 
             # first pixel in forest
-            for first_pixel,first_pixel_ll in enumerate(d.ll):
-                if 10.**first_pixel_ll>args.lambda_obs_min : break
+            if not args.linear_binning:
+                for first_pixel,first_pixel_ll in enumerate(d.ll):
+                    if 10.**first_pixel_ll>args.lambda_obs_min : break
+            else:
+                for first_pixel,first_pixel_l in enumerate(d.ll):
+                    if first_pixel_l>args.lambda_obs_min : break
 
             # minimum number of pixel in forest
             nb_pixel_min = args.nb_pixel_min
@@ -219,7 +221,7 @@ if __name__ == '__main__':
             nb_part_max = (len(d.ll)-first_pixel)//nb_pixel_min
             nb_part = min(args.nb_part,nb_part_max)
             if not args.res_from_vector:
-                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr,_,_ =     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel)
+                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr,_,_ =     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,linear_binning=args.linear_binning)
             else:
                 if args.linear_binning:
                     reso=d.reso_pix*d.dll
@@ -227,7 +229,7 @@ if __name__ == '__main__':
                     reso=d.reso
                 reso_matrix=d.reso_matrix
 
-                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr, reso_arr, reso_matrix_arr=     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,reso=reso,reso_matrix=reso_matrix)
+                m_z_arr,ll_arr,de_arr,diff_arr,iv_arr, reso_arr, reso_matrix_arr=     split_forest(nb_part,d.dll,d.ll,d.de,d.diff,d.iv,first_pixel,reso=reso,reso_matrix=reso_matrix,linear_binning=args.linear_binning)
 
             for ip in range(nb_part):
                 # rebin diff spectrum
@@ -235,11 +237,7 @@ if __name__ == '__main__':
                     diff_arr[ip]=rebin_diff_noise(d.dll,ll_arr[ip],diff_arr[ip])        #this doesnt work on linear binning yet
 
                 # Fill masked pixels with 0.
-                if not args.linear_binning:
-                    ll_new,delta_new,diff_new,iv_new,nb_masked_pixel = fill_masked_pixels(d.dll,ll_arr[ip],de_arr[ip],diff_arr[ip],iv_arr[ip],args.no_apply_filling)
-                else:
-                    ll_new,delta_new,diff_new,iv_new,nb_masked_pixel = fill_masked_pixels(d.dll,10**ll_arr[ip],de_arr[ip],diff_arr[ip],iv_arr[ip],args.no_apply_filling)
-                    #note that in this case ll_new is actually lambda not log(lambda) and dll is dlambda
+                ll_new,delta_new,diff_new,iv_new,nb_masked_pixel = fill_masked_pixels(d.dll,ll_arr[ip],de_arr[ip],diff_arr[ip],iv_arr[ip],args.no_apply_filling)
                 if (nb_masked_pixel> args.nb_pixel_masked_max) : continue
                 if (args.out_format=='root' and  args.debug): compute_mean_delta(ll_new,delta_new,iv_new,d.zqso)
 
@@ -296,8 +294,8 @@ if __name__ == '__main__':
                     Pk = Pk_raw / cor_reso
 
                 if args.linear_binning:
-                    Pk*=constants.speed_light/1000/sp.mean(sp.log(ll_new))
-                    k/=constants.speed_light/1000/sp.mean(sp.log(ll_new))
+                    Pk*=constants.speed_light/1000/sp.mean(ll_new)
+                    k/=constants.speed_light/1000/sp.mean(ll_new)
 
                 # save in root format
                 if (args.out_format=='root'):
