@@ -341,7 +341,7 @@ if __name__ == '__main__':
                     names=['k','Pk_raw','Pk_noise','Pk_diff','cor_reso','Pk']
                     comments=['Wavenumber', 'Raw power spectrum', "Noise's power spectrum", 'Noise coadd difference power spectrum',\
                               'Correction resolution function', 'Corrected power spectrum (resolution and noise)']
-                    units=['(km/s)^-1', 'km/s', 'km/s', 'km/s', 'km/s', 'km/s']
+                    units=['(km/s)^-1', 'km/s', 'km/s', 'km/s', '', 'km/s']
 
                     try:
                         out.write(cols,names=names,header=hd,comments=comments,units=units)

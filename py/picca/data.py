@@ -254,6 +254,11 @@ class forest(qso):
         if self.reso is not None:
             dic['reso'] = sp.append(self.reso, d.reso)
 
+        if self.reso_matrix is not None:
+            dic['reso_matrix'] = sp.append(self.reso_matrix, d.reso_matrix)
+        if self.reso_pix is not None:
+            dic['reso_pix'] = sp.append(self.reso_pix, d.reso_pix)
+
         bins = sp.floor((ll-forest.lmin)/forest.dll+0.5).astype(int)
         cll = forest.lmin + sp.arange(bins.max()+1)*forest.dll
 
@@ -313,12 +318,12 @@ class forest(qso):
         if self.reso is not None :
             if self.reso_matrix is not None:
                 nremove=self.reso_matrix.shape[0]//2
-                self.mean_reso = sp.mean(self.reso[nremove:-nremove]) #* constants.speed_light * 1000. * forest.dll * sp.log(10.0) #as I gave it reso_pix instead of km/s
+                self.mean_reso = sp.mean(self.reso)#[nremove:-nremove]) #* constants.speed_light * 1000. * forest.dll * sp.log(10.0) #as I gave it reso_pix instead of km/s
             else:
                 self.mean_reso = sp.mean(self.reso)
             if self.reso_matrix is not None:
                 nremove=self.reso_matrix.shape[0]//2
-                self.mean_reso_matrix = sp.mean(self.reso_matrix[:,nremove:-nremove],axis=1)   #this might be extended by properly filtering out pixels where boundary effects play a role (instead of just removing 4 pixels on each side). This will also return an empty array for short spectra (and the FFT of this will be nan)
+                self.mean_reso_matrix = sp.mean(self.reso_matrix,axis=1)#[:,nremove:-nremove],axis=1)   #this might be extended by properly filtering out pixels where boundary effects play a role (instead of just removing 4 pixels on each side). This will also return an empty array for short spectra (and the FFT of this will be nan)
 
     def add_dla(self,zabs,nhi,mask=None):
         if not hasattr(self,'ll'):
@@ -385,12 +390,12 @@ class forest(qso):
         if self.reso is not None :
             if self.reso_matrix is not None:
                 nremove=self.reso_matrix.shape[0]//2
-                self.mean_reso = sp.mean(self.reso[nremove:-nremove]) #* constants.speed_light * 1000. * forest.dll * sp.log(10.0) #as I gave it reso_pix instead of km/s
+                self.mean_reso = sp.mean(self.reso)#[nremove:-nremove]) #* constants.speed_light * 1000. * forest.dll * sp.log(10.0) #as I gave it reso_pix instead of km/s
             else:
                 self.mean_reso = sp.mean(self.reso)
             if self.reso_matrix is not None:
                 nremove=self.reso_matrix.shape[0]//2
-                self.mean_reso_matrix = sp.mean(self.reso_matrix[:,nremove:-nremove],axis=1)   #this might be extended by properly filtering out pixels where boundary effects play a role (instead of just removing 4 pixels on each side). This will also return an empty array for short spectra (and the FFT of this will be nan)
+                self.mean_reso_matrix = sp.mean(self.reso_matrix,axis=1)#[:,nremove:-nremove],axis=1)   #this might be extended by properly filtering out pixels where boundary effects play a role (instead of just removing 4 pixels on each side). This will also return an empty array for short spectra (and the FFT of this will be nan)
 
 
     def cont_fit(self):
