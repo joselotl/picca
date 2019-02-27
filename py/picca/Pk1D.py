@@ -219,11 +219,7 @@ def compute_cor_reso_matrix(dll, reso_matrix, ll, linear_binning=False):
     Wres2=sp.mean(W2arr,axis=0)
 
     sinc = sp.ones(len(k))
-    if not linear_binning:
-        sinc[k > 0.] = (sp.sin(k[k > 0.] * length_lambda_v / len(ll) / 2.0) /
-                    (k[k > 0.] * length_lambda_v / len(ll) / 2.0))**2
-    else:
-        sinc[k > 0.] = (sp.sin(k[k > 0.] * dll / 2.0) /
+    sinc[k > 0.] = (sp.sin(k[k > 0.] * dll / 2.0) /
                     (k[k > 0.] * dll / 2.0))**2
     cor = sp.ones(len(k))
     cor *= Wres2
