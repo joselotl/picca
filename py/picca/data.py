@@ -147,7 +147,6 @@ class forest(qso):
             reso_matrix = reso_matrix[:, w]
         if reso_pix is not None:
             reso_pix = reso_pix[w]
-        if reso.shape!=reso_pix.shape: raise
         # rebin
         cll = forest.lmin + sp.arange(bins.max() + 1) * forest.dll
         cfl = sp.zeros(bins.max() + 1)
@@ -165,9 +164,9 @@ class forest(qso):
         if diff is not None:
             cdiff = sp.bincount(bins, weights=iv * diff)
         if reso is not None:
-            creso = sp.bincount(bins, weights=iv * reso)
+            ccreso = sp.bincount(bins, weights=iv * reso)
         if reso_pix is not None:
-            creso_pix = sp.bincount(bins, weights=iv * reso_pix)
+            ccreso_pix = sp.bincount(bins, weights=iv * reso_pix)
         if reso_matrix is not None:
             creso_matrix = sp.zeros((reso_matrix.shape[0], bins.max() + 1))
             for i, r in enumerate(reso_matrix):
@@ -178,6 +177,10 @@ class forest(qso):
         civ[:len(cciv)] += cciv
         if mmef is not None:
             cmmef[:len(ccmmef)] += ccmmef
+        if reso is not None:
+            creso[:len(creso)] += ccreso
+        if reso_pix is not None:
+            creso_pix[:len(creso_pix)] += ccreso_pix
         w = (civ > 0.)
         if w.sum() == 0:
             return
@@ -191,7 +194,7 @@ class forest(qso):
         if reso is not None:
             reso = creso[w] / civ[w]
         if reso_pix is not None:
-            creso_pix = creso_pix[w] / civ[w]
+            reso_pix = creso_pix[w] / civ[w]
         if reso_matrix is not None:
             reso_matrix = creso_matrix[:, w] / civ[sp.newaxis, w]
 
@@ -218,7 +221,6 @@ class forest(qso):
         self.reso = reso
         self.reso_matrix = reso_matrix
         self.reso_pix = reso_pix
-        if reso.shape!=reso_pix.shape: raise
 
 #        else :
 #           self.diff = sp.zeros(len(ll))
@@ -266,7 +268,6 @@ class forest(qso):
             dic['reso_matrix'] = sp.append(self.reso_matrix, d.reso_matrix)
         if self.reso_pix is not None:
             dic['reso_pix'] = sp.append(self.reso_pix, d.reso_pix)
-        if reso.shape!=reso_pix.shape: raise
 
         bins = sp.floor((ll-forest.lmin)/forest.dll+0.5).astype(int)
         cll = forest.lmin + sp.arange(bins.max()+1)*forest.dll
@@ -324,7 +325,6 @@ class forest(qso):
             self.reso_matrix = self.reso_matrix[:,w]
         if self.reso_pix is not None:
             self.reso_pix = self.reso_pix[w]
-        if reso.shape!=reso_pix.shape: raise
 
         if self.reso is not None :
             if self.reso_matrix is not None:
@@ -365,7 +365,6 @@ class forest(qso):
             self.reso = self.reso[w]
         if self.reso_pix is not None:
             self.reso_pix = self.reso_pix[w]
-        if reso.shape!=reso_pix.shape: raise
 
         if self.reso_matrix is not None:
             self.reso_matrix = self.reso_matrix[:,w]
@@ -400,7 +399,6 @@ class forest(qso):
              self.reso_matrix = self.reso_matrix[:,w]
         if self.reso_pix is not None:
              self.reso_pix = self.reso_pix[w]
-        if reso.shape!=reso_pix.shape: raise
 
         if self.reso is not None :
             if self.reso_matrix is not None:
@@ -503,7 +501,6 @@ class delta(qso):
         self.reso_matrix = reso_matrix
         self.reso_pix = reso_pix
         self.linear_binning = linear_binning
-        if reso.shape!=reso_pix.shape: raise
 
 
     @classmethod
