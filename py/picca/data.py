@@ -147,7 +147,7 @@ class forest(qso):
             reso_matrix = reso_matrix[:, w]
         if reso_pix is not None:
             reso_pix = reso_pix[w]
-
+        if reso.shape!=reso_pix.shape: raise
         # rebin
         cll = forest.lmin + sp.arange(bins.max() + 1) * forest.dll
         cfl = sp.zeros(bins.max() + 1)
@@ -212,6 +212,8 @@ class forest(qso):
         self.reso = reso
         self.reso_matrix = reso_matrix
         self.reso_pix = reso_pix
+        if reso.shape!=reso_pix.shape: raise
+
 #        else :
 #           self.diff = sp.zeros(len(ll))
 #           self.reso = sp.ones(len(ll))
@@ -258,6 +260,7 @@ class forest(qso):
             dic['reso_matrix'] = sp.append(self.reso_matrix, d.reso_matrix)
         if self.reso_pix is not None:
             dic['reso_pix'] = sp.append(self.reso_pix, d.reso_pix)
+        if reso.shape!=reso_pix.shape: raise
 
         bins = sp.floor((ll-forest.lmin)/forest.dll+0.5).astype(int)
         cll = forest.lmin + sp.arange(bins.max()+1)*forest.dll
@@ -315,6 +318,8 @@ class forest(qso):
             self.reso_matrix = self.reso_matrix[:,w]
         if self.reso_pix is not None:
             self.reso_pix = self.reso_pix[w]
+        if reso.shape!=reso_pix.shape: raise
+
         if self.reso is not None :
             if self.reso_matrix is not None:
                 nremove=self.reso_matrix.shape[0]//2
@@ -354,6 +359,8 @@ class forest(qso):
             self.reso = self.reso[w]
         if self.reso_pix is not None:
             self.reso_pix = self.reso_pix[w]
+        if reso.shape!=reso_pix.shape: raise
+
         if self.reso_matrix is not None:
             self.reso_matrix = self.reso_matrix[:,w]
         if self.reso is not None :
@@ -387,6 +394,8 @@ class forest(qso):
              self.reso_matrix = self.reso_matrix[:,w]
         if self.reso_pix is not None:
              self.reso_pix = self.reso_pix[w]
+        if reso.shape!=reso_pix.shape: raise
+
         if self.reso is not None :
             if self.reso_matrix is not None:
                 nremove=self.reso_matrix.shape[0]//2
@@ -488,6 +497,8 @@ class delta(qso):
         self.reso_matrix = reso_matrix
         self.reso_pix = reso_pix
         self.linear_binning = linear_binning
+        if reso.shape!=reso_pix.shape: raise
+
 
     @classmethod
     def from_forest(cls,f,st,var_lss,eta,fudge,mc=False):
@@ -540,6 +551,7 @@ class delta(qso):
                 reso_pix=h['RESO_PIX'][:]
             except (KeyError, ValueError):
                 reso_pix=None
+
             we = None
             co = None
             try:
