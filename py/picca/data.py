@@ -162,13 +162,14 @@ class forest(qso):
             cdiff = sp.bincount(bins, weights=iv * diff)
         if reso is not None:
             creso = sp.bincount(bins, weights=iv * reso)
+        if reso_pix is not None:
+            creso_pix = sp.bincount(bins, weights=iv * reso_pix)
         if reso_matrix is not None:
             creso_matrix = sp.zeros((reso_matrix.shape[0], bins.max() + 1))
             for i, r in enumerate(reso_matrix):
                 # need to think about this, does rebinning even make sense for the resolution matrix, probably not, but to be able to get the following lines right this would be needed. And this is probably the best way if it is sensible at all, it might be necessary to compute everything in lambda instead of log(lambda) in the end
                 creso_matrix[i, :] = sp.bincount(bins, weights=iv * r)
-        if reso_pix is not None:
-            creso_pix = sp.bincount(bins, weights=iv * reso_pix)
+
         cfl[:len(ccfl)] += ccfl
         civ[:len(cciv)] += cciv
         if mmef is not None:
