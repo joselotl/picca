@@ -211,40 +211,12 @@ def compute_cor_reso_matrix(dll, reso_matrix, ll, linear_binning=False):
     W2arr=[]
     for resmat in reso_matrix:
         r=sp.append(resmat, sp.zeros(ll.size-resmat.size))
-        if linear_binning:
-            k,W2=compute_Pk_raw(dll, r, ll, linear_binning)
-            W2/=W2[0]
-            W2arr.append(W2)
-
-        else:
-            #something in here is extremely weird
-            length_lambda_r = len(ll)*(ll[-1]-ll[0])#dll*sp.log(10.)*constants.speed_light/1000.
-            length_lambda_v = dll*constants.speed_light/1000.*sp.log(10.)*len(ll)
-
-            # make 1D FFT
-            nb_pixels = len(r)
-            nb_bin_FFT = nb_pixels//2 + 1
-            fft_a = fft(r)
-
-            # compute window correction in 1/wavelength bins
-            fft_a = fft_a[:nb_bin_FFT]
-            W2_r = (fft_a.real**2+fft_a.imag**2)*length_lambda_r/nb_pixels**2
-            W2_r /= W2_r[0]
-            k_r = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_r
-
-
-            #convert k-bins to velocity space
-            k_v=k_r/(constants.speed_light/1000.)*10**sp.mean(ll)
-            #define output k array (could be an argument instead)
-            k = sp.arange(nb_bin_FFT,dtype=float)*2*sp.pi/length_lambda_v
-
-            #interpolate to output k array
-            sqneglogW=sp.sqrt(-sp.log(W2_r)) #as W is close to gaussian in k, this will be close to linear in k
-            W2_int=spint.interp1d(k_v, sqneglogW, fill_value=(1,0),bounds_error=False)
-            Wres2=sp.exp(-W2_int(k)**2)
-            W2arr.append(Wres2)
-
-        Wres2=sp.mean(W2arr,axis=0)
+        if not linear_binning:
+            print("the reso matrix correction so far only works properly with linear binning")
+        k,W2=compute_Pk_raw(dll, r, ll, linear_binning)
+        W2/=W2[0]
+        W2arr.append(W2)
+    Wres2=sp.mean(W2arr,axis=0)
 
     sinc = sp.ones(len(k))
     if not linear_binning:
