@@ -154,6 +154,10 @@ class forest(qso):
         civ = sp.zeros(bins.max() + 1)
         if mmef is not None:
             cmmef = sp.zeros(bins.max() + 1)
+        if reso is not None:
+            creso = sp.zeros(bins.max() + 1)
+        if reso_pix is not None:
+            creso_pix = sp.zeros(bins.max() + 1)
         ccfl = sp.bincount(bins, weights=iv * fl)
         cciv = sp.bincount(bins, weights=iv)
         if mmef is not None:
@@ -186,10 +190,11 @@ class forest(qso):
             diff = cdiff[w] / civ[w]
         if reso is not None:
             reso = creso[w] / civ[w]
-        if reso_matrix is not None:
-            reso_matrix = creso_matrix[:, w] / civ[sp.newaxis, w]
         if reso_pix is not None:
             creso_pix = creso_pix[w] / civ[w]
+        if reso_matrix is not None:
+            reso_matrix = creso_matrix[:, w] / civ[sp.newaxis, w]
+
 
 
 
