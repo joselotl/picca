@@ -265,7 +265,7 @@ class forest(qso):
             dic['reso'] = sp.append(self.reso, d.reso)
 
         if self.reso_matrix is not None:
-            dic['reso_matrix'] = sp.append(self.reso_matrix, d.reso_matrix)
+            dic['reso_matrix'] = sp.append(self.reso_matrix, d.reso_matrix,axis=1)
         if self.reso_pix is not None:
             dic['reso_pix'] = sp.append(self.reso_pix, d.reso_pix)
 
@@ -281,10 +281,17 @@ class forest(qso):
         self.iv = civ[w]
 
         for k, v in dic.items():
-            cnew = sp.zeros(bins.max() + 1)
-            ccnew = sp.bincount(bins, weights=iv * v)
-            cnew[:len(ccnew)] += ccnew
-            setattr(self, k, cnew[w] / civ[w])
+            if len(v.shape)==1:
+                cnew = sp.zeros(bins.max() + 1)
+                ccnew = sp.bincount(bins, weights=iv * v)
+                cnew[:len(ccnew)] += ccnew
+                setattr(self, k, cnew[w] / civ[w])
+            else:
+                cnew = sp.zeros(v.shape[0],bins.max() + 1)
+                for ivsub,vsub in enumerate(v):
+                    ccsubnew = sp.bincount(bins, weights=iv * vsub)
+                    csubnew[ivsub,:len(ccnew)] += ccsubnew
+                setattr(self, k, cnew[:,w] / civ[w])
 
         # recompute means of quality variables
         if self.reso is not None:
