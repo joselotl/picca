@@ -290,7 +290,7 @@ class forest(qso):
                 cnew = sp.zeros(v.shape[0],bins.max() + 1)
                 for ivsub,vsub in enumerate(v):
                     ccsubnew = sp.bincount(bins, weights=iv * vsub)
-                    csubnew[ivsub,:len(ccnew)] += ccsubnew
+                    cnew[ivsub,:len(ccnew)] += ccsubnew
                 setattr(self, k, cnew[:,w] / civ[w])
 
         # recompute means of quality variables
