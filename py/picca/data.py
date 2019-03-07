@@ -287,7 +287,7 @@ class forest(qso):
                 cnew[:len(ccnew)] += ccnew
                 setattr(self, k, cnew[w] / civ[w])
             else:
-                cnew = sp.zeros(v.shape[0],bins.max() + 1)
+                cnew = sp.zeros([v.shape[0],bins.max() + 1])
                 for ivsub,vsub in enumerate(v):
                     ccsubnew = sp.bincount(bins, weights=iv * vsub)
                     cnew[ivsub,:len(ccnew)] += ccsubnew
