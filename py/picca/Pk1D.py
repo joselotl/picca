@@ -215,14 +215,14 @@ def compute_cor_reso_matrix(dll, reso_matrix, ll, linear_binning=False):
             #print("the reso matrix correction so far only works properly with linear binning")
             k_wave,W2=compute_Pk_raw(1, r, ll, linear_binning=True) #this assumes a pixel scale of 1 Angstrom inside the reso matrix
             W2/=W2[0]
-            k_vel=k_wave*constants.speed_light/1000/sp.mean(10**ll)
-            print ('kvel: {:s}'.format(' '.join(['{:.3f}'.format(ki) for ki in k_vel]) ))
+            k_vel=k_wave/(constants.speed_light/1000/sp.mean(10**ll))
+            #print ('kvel: {:s}'.format(' '.join(['{:.3f}'.format(ki) for ki in k_vel]) ))
             W2int=spint.interp1d(k_vel,W2,bounds_error=False)
 
             length_lambda = dll*constants.speed_light/1000.*sp.log(10.)*len(ll)
             k = sp.arange(len(W2),dtype=float)*2*sp.pi/length_lambda
             W2arr.append(W2int(k))
-            print ('k: {}'.format(' '.join(['{:.3f}'.format(ki) for ki in k]) ))
+            #print ('k: {}'.format(' '.join(['{:.3f}'.format(ki) for ki in k]) ))
         else:
             k,W2=compute_Pk_raw(dll, r, ll, linear_binning)
             W2/=W2[0]
