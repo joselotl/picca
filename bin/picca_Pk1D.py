@@ -275,7 +275,7 @@ if __name__ == '__main__':
                 elif args.res_estimate == 'noresolution':
                     cor_reso = sp.ones(Pk_raw.shape)
                 elif args.res_estimate == 'pixel':
-                    cor_reso = compute_cor_reso(delta_pixel, 0.001, k)  #just use an extremely high resolution here to mimic pixelization only
+                    cor_reso = compute_cor_reso(delta_pixel, 1e-10, k)  #just use an extremely high resolution here to mimic pixelization only
                 elif args.res_estimate == 'nopixel':
                     cor_reso = compute_cor_reso(1e-10, reso, k)  #just use an extremely small pixel scale here to mimic resolution only
 
