@@ -212,7 +212,7 @@ def compute_cor_reso_matrix(dll, reso_matrix, ll, linear_binning=False):
     for resmat in reso_matrix:
         r=sp.append(resmat, sp.zeros(ll.size-resmat.size))
         if not linear_binning:
-            print("the reso matrix correction so far only works properly with linear binning")
+            #print("the reso matrix correction so far only works properly with linear binning")
             k_wave,W2=compute_Pk_raw(1, r, ll, linear_binning=True) #this assumes a pixel scale of 1 Angstrom inside the reso matrix
             W2/=W2[0]
             k_vel=k_wave*constants.speed_light/1000/sp.mean(10**ll)
