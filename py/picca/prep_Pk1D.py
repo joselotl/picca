@@ -71,8 +71,8 @@ def spectral_resolution(wdisp,with_correction=None,fiber=None,ll=None) :
 
 def spectral_resolution_desi(reso_matrix, ll) :
 
-    dll = sp.diff(ll,1)#(ll[-1]-ll[0])/float(len(ll)-1)
-    dll = sp.append(dll,dll[-1]) #repeat the last value again, while this is wrong it shouldn't matter as it's only 1 pix and differences are small (but large enough along the full sightline)
+    dll = sp.diff(ll,1)#(ll[-1]-ll[0])/float(len(ll)-1)  #the old version did only use the mean pixel size which is ok when using equal size pixels, but not when pixel size changes within the spectrum (with the default 1AA binning of the spectra this corresponds to dll of (rebinning happens as well further complicating the resolution correction): z=2.2: 11e-5, z=2.5: 10e-5, z=3: 8.9e-5, z=3.5: 7.9e-5, while the mean is 9.3e-5 leading to underestimation of low z reso_in_km_per_s and overestimation at high z)
+    dll = sp.append(dll,dll[-1]) #repeat the last value again, while this is not fully correct it shouldn't matter as it's only 1 pix and differences are small (but large enough along the full sightline)
     reso= sp.clip(reso_matrix,1.0e-6,1.0e6)
     rms_in_pixel = (sp.sqrt(1.0/2.0/sp.log(reso[len(reso)//2][:]/reso[len(reso)//2-1][:]))
                     + sp.sqrt(4.0/2.0/sp.log(reso[len(reso)//2][:]/reso[len(reso)//2-2][:]))
