@@ -164,6 +164,7 @@ if __name__ == '__main__':
         print(" zqso_max = {}".format(args.zqso_max) )
 
     forest.var_lss = interp1d(forest.lmin+sp.arange(2)*(forest.lmax-forest.lmin),0.2 + sp.zeros(2),fill_value="extrapolate",kind="nearest")
+    forest.var_con = interp1d(forest.lmin_rest+sp.arange(2)*(forest.lmax_rest-forest.lmin_rest),0.2 + sp.zeros(2),fill_value="extrapolate",kind="nearest")
     forest.eta = interp1d(forest.lmin+sp.arange(2)*(forest.lmax-forest.lmin), sp.ones(2),fill_value="extrapolate",kind="nearest")
     forest.fudge = interp1d(forest.lmin+sp.arange(2)*(forest.lmax-forest.lmin), sp.zeros(2),fill_value="extrapolate",kind="nearest")
     forest.mean_cont = interp1d(forest.lmin_rest+sp.arange(2)*(forest.lmax_rest-forest.lmin_rest),1+sp.zeros(2))
