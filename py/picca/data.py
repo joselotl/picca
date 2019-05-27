@@ -7,7 +7,7 @@ import iminuit
 from .dla import dla
 import fitsio
 
-def variance(var,eta,var_lss,fudge):
+def variance(var,eta,var_lss,fudge,var_cont):
     return eta*var + var_lss + fudge/var
 
 
@@ -315,6 +315,7 @@ class forest(qso):
             mc*=self.T_dla
 
         var_lss = forest.var_lss(self.ll)
+        var_cont = forest.var_cont(self.ll-sp.log10(1.+self.zqso))
         eta = forest.eta(self.ll)
         fudge = forest.fudge(self.ll)
 
@@ -328,7 +329,7 @@ class forest(qso):
             ## prep_del.variance is the variance of delta
             ## we want here the we = ivar(flux)
 
-            var_tot = variance(var_pipe,eta,var_lss,fudge)
+            var_tot = variance(var_pipe,eta,var_lss,fudge,var_cont)
             we = 1/m**2/var_tot
 
             # force we=1 when use-constant-weight
@@ -382,11 +383,12 @@ class delta(qso):
         self.dll = dll
 
     @classmethod
-    def from_forest(cls,f,st,var_lss,eta,fudge,mc=False):
+    def from_forest(cls,f,st,var_lss,eta,fudge,var_cont,mc=False):
 
         ll = f.ll
         mst = st(ll)
         var_lss = var_lss(ll)
+        var_cont = var_cont(ll-sp.log10(1.+f.zqso))
         eta = eta(ll)
         fudge = fudge(ll)
 
@@ -395,7 +397,7 @@ class delta(qso):
         else : mef = f.co * mst
         de = f.fl/ mef -1.
         var = 1./f.iv/mef**2
-        we = 1./variance(var,eta,var_lss,fudge)
+        we = 1./variance(var,eta,var_lss,fudge,var_cont)
         diff = f.diff
         if f.diff is not None:
             diff /= mef

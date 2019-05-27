@@ -387,7 +387,7 @@ if __name__ == '__main__':
     var = sp.broadcast_to(var.reshape(1,-1),var_del.shape)
     res.write([var,var_del,var2_del,count,nqsos,chi2],names=['var_pipe','var_del','var2_del','count','nqsos','chi2'],extname='VAR')
     res.write([ll_cont,eta_cont,vcont,fudge_cont,nb_pixels_cont],
-        names=['loglam','eta','var_lss','fudge','nb_pixels'],extname='WEIGHTCONT')
+        names=['loglam','eta','var_cont','fudge','nb_pixels'],extname='WEIGHTCONT')
     var_cont = sp.broadcast_to(var_cont.reshape(1,-1),var_del_cont.shape)
     res.write([var_cont,var_del_cont,var2_del_cont,count_cont,nqsos_cont,chi2_cont],
         names=['var_pipe','var_del','var2_del','count','nqsos','chi2'],extname='VARCONT')
@@ -398,7 +398,7 @@ if __name__ == '__main__':
     deltas = {}
     data_bad_cont = []
     for p in sorted(list(data.keys())):
-        deltas[p] = [delta.from_forest(d,st,forest.var_lss,forest.eta,forest.fudge, args.use_mock_continuum) for d in data[p] if d.bad_cont is None]
+        deltas[p] = [delta.from_forest(d,st,forest.var_lss,forest.eta,forest.fudge,forest.var_cont, args.use_mock_continuum) for d in data[p] if d.bad_cont is None]
         data_bad_cont = data_bad_cont + [d for d in data[p] if d.bad_cont is not None]
 
     for d in data_bad_cont:

@@ -14,10 +14,11 @@ def mc(data):
         for d in data[p]:
             bins=((d.ll-forest.lmin_rest-sp.log10(1+d.zqso))/(forest.lmax_rest-forest.lmin_rest)*nmc).astype(int)
             var_lss = forest.var_lss(d.ll)
+            var_cont = forest.var_cont(d.ll-sp.log10(1.+d.zqso))
             eta = forest.eta(d.ll)
             fudge = forest.fudge(d.ll)
             var = 1./d.iv/d.co**2
-            we = 1/variance(var,eta,var_lss,fudge)
+            we = 1./variance(var,eta,var_lss,fudge,var_cont)
             c = sp.bincount(bins,weights=d.fl/d.co*we)
             mcont[:len(c)]+=c
             c = sp.bincount(bins,weights=we)
@@ -241,10 +242,11 @@ def stack(data,delta=False):
             else:
                 de = d.fl/d.co
                 var_lss = forest.var_lss(d.ll)
+                var_cont = forest.var_cont(d.ll-sp.log10(1.+d.zqso))
                 eta = forest.eta(d.ll)
                 fudge = forest.fudge(d.ll)
                 var = 1./d.iv/d.co**2
-                we = 1./variance(var,eta,var_lss,fudge)
+                we = 1./variance(var,eta,var_lss,fudge,var_cont)
 
             bins=((d.ll-forest.lmin)/forest.dll+0.5).astype(int)
             c = sp.bincount(bins,weights=de*we)
