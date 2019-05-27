@@ -128,27 +128,27 @@ def var_lss(data,eta_lim=(0.5,1.5),vlss_lim=(0.,0.3)):
         var_del.reshape(nlss,-1),var2_del.reshape(nlss,-1),\
         count.reshape(nlss,-1),nqso.reshape(nlss,-1),\
         bin_chi2,err_eta,err_vlss,err_fudge
-def var_con(data,eta_lim=(0.5,1.5),vcon_lim=(0.,0.3)):
-    ncon = 20
-    eta = sp.zeros(ncon)
-    vcon = sp.zeros(ncon)
-    fudge = sp.zeros(ncon)
-    err_eta = sp.zeros(ncon)
-    err_vcon = sp.zeros(ncon)
-    err_fudge = sp.zeros(ncon)
-    nb_pixels = sp.zeros(ncon)
-    ll = forest.lmin_rest + (sp.arange(ncon)+.5)*(forest.lmax_rest-forest.lmin_rest)/ncon
+def var_cont(data,eta_lim=(0.5,1.5),vcont_lim=(0.,0.3)):
+    ncont = 20
+    eta = sp.zeros(ncont)
+    vcont = sp.zeros(ncont)
+    fudge = sp.zeros(ncont)
+    err_eta = sp.zeros(ncont)
+    err_vcont = sp.zeros(ncont)
+    err_fudge = sp.zeros(ncont)
+    nb_pixels = sp.zeros(ncont)
+    ll = forest.lmin_rest + (sp.arange(ncont)+.5)*(forest.lmax_rest-forest.lmin_rest)/ncont
 
     nwe = 100
     vpmin = sp.log10(1e-5)
     vpmax = sp.log10(2.)
     var = 10**(vpmin + (sp.arange(nwe)+.5)*(vpmax-vpmin)/nwe)
 
-    var_del = sp.zeros(ncon*nwe)
-    mdel = sp.zeros(ncon*nwe)
-    var2_del = sp.zeros(ncon*nwe)
-    count = sp.zeros(ncon*nwe)
-    nqso = sp.zeros(ncon*nwe)
+    var_del = sp.zeros(ncont*nwe)
+    mdel = sp.zeros(ncont*nwe)
+    var2_del = sp.zeros(ncont*nwe)
+    count = sp.zeros(ncont*nwe)
+    nqso = sp.zeros(ncont*nwe)
 
     for p in sorted(list(data.keys())):
         for d in data[p]:
@@ -156,7 +156,7 @@ def var_con(data,eta_lim=(0.5,1.5),vcon_lim=(0.,0.3)):
             var_pipe = 1/d.iv/d.co**2
             w = (sp.log10(var_pipe) > vpmin) & (sp.log10(var_pipe) < vpmax)
 
-            bll = ((d.ll-forest.lmin_rest-sp.log10(1.+d.zqso))/(forest.lmax_rest-forest.lmin_rest)*ncon).astype(int)
+            bll = ((d.ll-forest.lmin_rest-sp.log10(1.+d.zqso))/(forest.lmax_rest-forest.lmin_rest)*ncont).astype(int)
             bwe = sp.floor((sp.log10(var_pipe)-vpmin)/(vpmax-vpmin)*nwe).astype(int)
 
             bll = bll[w]
@@ -188,44 +188,44 @@ def var_con(data,eta_lim=(0.5,1.5),vcon_lim=(0.,0.3)):
     var2_del -= var_del**2
     var2_del[w] /= count[w]
 
-    bin_chi2 = sp.zeros(ncon)
+    bin_chi2 = sp.zeros(ncont)
     fudge_ref = 1e-7
-    for i in range(ncon):
-        def chi2(eta,vcon,fudge):
-            v = var_del[i*nwe:(i+1)*nwe]-variance(var,eta,vcon,fudge*fudge_ref)
+    for i in range(ncont):
+        def chi2(eta,vcont,fudge):
+            v = var_del[i*nwe:(i+1)*nwe]-variance(var,eta,vcont,fudge*fudge_ref)
             dv2 = var2_del[i*nwe:(i+1)*nwe]
             w=nqso[i*nwe:(i+1)*nwe]>100
             return sp.sum(v[w]**2/dv2[w])
-        mig = iminuit.Minuit(chi2,forced_parameters=('eta','vcon','fudge'),
-            eta=1.,vcon=0.1,fudge=1.,
-            error_eta=0.05,error_vcon=0.05,error_fudge=0.05,
+        mig = iminuit.Minuit(chi2,forced_parameters=('eta','vcont','fudge'),
+            eta=1.,vcont=0.1,fudge=1.,
+            error_eta=0.05,error_vcont=0.05,error_fudge=0.05,
             errordef=1.,print_level=0,
-            limit_eta=eta_lim,limit_vcon=vcon_lim,limit_fudge=(0,None))
+            limit_eta=eta_lim,limit_vcont=vcont_lim,limit_fudge=(0,None))
         mig.migrad()
 
         if mig.migrad_ok():
             mig.hesse()
             eta[i] = mig.values['eta']
-            vcon[i] = mig.values['vcon']
+            vcont[i] = mig.values['vcont']
             fudge[i] = mig.values['fudge']*fudge_ref
             err_eta[i] = mig.errors['eta']
-            err_vcon[i] = mig.errors['vcon']
+            err_vcont[i] = mig.errors['vcont']
             err_fudge[i] = mig.errors['fudge']*fudge_ref
         else:
             eta[i] = 1.
-            vcon[i] = 0.1
+            vcont[i] = 0.1
             fudge[i] = 1.*fudge_ref
             err_eta[i] = 0.
-            err_vcon[i] = 0.
+            err_vcont[i] = 0.
             err_fudge[i] = 0.
         nb_pixels[i] = count[i*nwe:(i+1)*nwe].sum()
         bin_chi2[i] = mig.fval
-        print('INFO: ',eta[i],vcon[i],fudge[i],mig.fval, nb_pixels[i],err_eta[i],err_vcon[i],err_fudge[i])
+        print('INFO: ',eta[i],vcont[i],fudge[i],mig.fval, nb_pixels[i],err_eta[i],err_vcont[i],err_fudge[i])
 
-    return ll,eta,vcon,fudge,nb_pixels,var,\
-        var_del.reshape(ncon,-1),var2_del.reshape(ncon,-1),\
-        count.reshape(ncon,-1),nqso.reshape(ncon,-1),\
-        bin_chi2,err_eta,err_vcon,err_fudge
+    return ll,eta,vcont,fudge,nb_pixels,var,\
+        var_del.reshape(ncont,-1),var2_del.reshape(ncont,-1),\
+        count.reshape(ncont,-1),nqso.reshape(ncont,-1),\
+        bin_chi2,err_eta,err_vcont,err_fudge
 
 
 def stack(data,delta=False):

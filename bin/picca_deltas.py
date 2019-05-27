@@ -164,7 +164,7 @@ if __name__ == '__main__':
         print(" zqso_max = {}".format(args.zqso_max) )
 
     forest.var_lss = interp1d(forest.lmin+sp.arange(2)*(forest.lmax-forest.lmin),0.2 + sp.zeros(2),fill_value="extrapolate",kind="nearest")
-    forest.var_con = interp1d(forest.lmin_rest+sp.arange(2)*(forest.lmax_rest-forest.lmin_rest),0.2 + sp.zeros(2),fill_value="extrapolate",kind="nearest")
+    forest.var_cont = interp1d(forest.lmin_rest+sp.arange(2)*(forest.lmax_rest-forest.lmin_rest),0.2 + sp.zeros(2),fill_value="extrapolate",kind="nearest")
     forest.eta = interp1d(forest.lmin+sp.arange(2)*(forest.lmax-forest.lmin), sp.ones(2),fill_value="extrapolate",kind="nearest")
     forest.fudge = interp1d(forest.lmin+sp.arange(2)*(forest.lmax-forest.lmin), sp.zeros(2),fill_value="extrapolate",kind="nearest")
     forest.mean_cont = interp1d(forest.lmin_rest+sp.arange(2)*(forest.lmax_rest-forest.lmin_rest),1+sp.zeros(2))
@@ -327,7 +327,7 @@ if __name__ == '__main__':
             if not (args.use_ivar_as_weight or args.use_constant_weight):
                 ll, eta, vlss, fudge, nb_pixels, var, var_del, var2_del,\
                     count, nqsos, chi2, err_eta, err_vlss, err_fudge = \
-                        prep_del.var_lss(data,(args.eta_min,args.eta_max),(args.vlss_min,args.vlss_max))
+                    prep_del.var_lss(data,(args.eta_min,args.eta_max),(args.vlss_min,args.vlss_max))
                 forest.eta = interp1d(ll[nb_pixels>0], eta[nb_pixels>0],
                     fill_value = "extrapolate",kind="nearest")
                 forest.var_lss = interp1d(ll[nb_pixels>0], vlss[nb_pixels>0.],
@@ -335,20 +335,11 @@ if __name__ == '__main__':
                 forest.fudge = interp1d(ll[nb_pixels>0],fudge[nb_pixels>0],
                     fill_value = "extrapolate",kind="nearest")
 
-                ll_con, eta_con, vcon, fudge_con, nb_pixels_con, var_con, var_del_con, var2_del_con,\
-                    count_con, nqsos_con, chi2_con, err_eta_con, err_vcon, err_fudge_con = \
-                    prep_del.var_con(data,(args.eta_min,args.eta_max),(args.vlss_min,args.vlss_max))
-                forest.var_con = interp1d(ll_con[nb_pixels>0], vcon[nb_pixels>0.],
+                ll_cont, eta_cont, vcont, fudge_cont, nb_pixels_cont, var_cont, var_del_cont, var2_del_cont,\
+                    count_cont, nqsos_cont, chi2_cont, err_eta_cont, err_vcont, err_fudge_cont = \
+                    prep_del.var_cont(data,(args.eta_min,args.eta_max),(args.vlss_min,args.vlss_max))
+                forest.var_cont = interp1d(ll_cont[nb_pixels>0], vcont[nb_pixels>0.],
                     fill_value = 'extrapolate',kind='nearest')
-
-                import matplotlib.pyplot as plt
-                plt.plot(10.**ll_con,vcon,label='value')
-                plt.plot(10.**ll_con,err_vcon,label='error')
-                plt.legend()
-                plt.title(str(it))
-                plt.grid()
-                plt.show()
-
             else:
 
                 nlss=10 # this value is arbitrary
@@ -395,11 +386,11 @@ if __name__ == '__main__':
     res.write([ll_rest,forest.mean_cont(ll_rest),wmc],names=['loglam_rest','mean_cont','weight'],extname='CONT')
     var = sp.broadcast_to(var.reshape(1,-1),var_del.shape)
     res.write([var,var_del,var2_del,count,nqsos,chi2],names=['var_pipe','var_del','var2_del','count','nqsos','chi2'],extname='VAR')
-
-    res.write([ll_con,eta_con,vcon,fudge_con,nb_pixels_con],names=['loglam','eta','var_lss','fudge','nb_pixels'],extname='WEIGHTCONT')
-    var_con = sp.broadcast_to(var_con.reshape(1,-1),var_del_con.shape)
-    res.write([var_con,var_del_con,var2_del_con,count_con,nqsos_con,chi2_con],names=['var_pipe','var_del','var2_del','count','nqsos','chi2'],extname='VARCONT')
-
+    res.write([ll_cont,eta_cont,vcont,fudge_cont,nb_pixels_cont],
+        names=['loglam','eta','var_lss','fudge','nb_pixels'],extname='WEIGHTCONT')
+    var_cont = sp.broadcast_to(var_cont.reshape(1,-1),var_del_cont.shape)
+    res.write([var_cont,var_del_cont,var2_del_cont,count_cont,nqsos_cont,chi2_cont],
+        names=['var_pipe','var_del','var2_del','count','nqsos','chi2'],extname='VARCONT')
     res.close()
 
     ### Save delta

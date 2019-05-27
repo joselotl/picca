@@ -94,7 +94,7 @@ class forest(qso):
     dla_mask = None
 
     var_lss = None
-    var_con = None
+    var_cont = None
     eta = None
     mean_cont = None
 
