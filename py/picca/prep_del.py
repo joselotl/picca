@@ -94,7 +94,7 @@ def var_lss(data,eta_lim=(0.5,1.5),vlss_lim=(0.,0.3)):
     fudge_ref = 1e-7
     for i in range(nlss):
         def chi2(eta,vlss,fudge):
-            v = var_del[i*nwe:(i+1)*nwe]-variance(var,eta,vlss,fudge*fudge_ref)
+            v = var_del[i*nwe:(i+1)*nwe]-variance(var,eta,vlss,fudge*fudge_ref,0.)
             dv2 = var2_del[i*nwe:(i+1)*nwe]
             w=nqso[i*nwe:(i+1)*nwe]>100
             return sp.sum(v[w]**2/dv2[w])
@@ -193,7 +193,7 @@ def var_cont(data,eta_lim=(0.5,1.5),vcont_lim=(0.,0.3)):
     fudge_ref = 1e-7
     for i in range(ncont):
         def chi2(eta,vcont,fudge):
-            v = var_del[i*nwe:(i+1)*nwe]-variance(var,eta,vcont,fudge*fudge_ref)
+            v = var_del[i*nwe:(i+1)*nwe]-variance(var,eta,vcont,fudge*fudge_ref,0.)
             dv2 = var2_del[i*nwe:(i+1)*nwe]
             w=nqso[i*nwe:(i+1)*nwe]>100
             return sp.sum(v[w]**2/dv2[w])
