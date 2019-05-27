@@ -153,7 +153,7 @@ def var_cont(data,eta_lim=(0.5,1.5),vcont_lim=(0.,0.3)):
     for p in sorted(list(data.keys())):
         for d in data[p]:
 
-            var_pipe = 1/d.iv/d.co**2
+            var_pipe = 1./d.iv/d.co**2
             w = (sp.log10(var_pipe) > vpmin) & (sp.log10(var_pipe) < vpmax)
 
             bll = ((d.ll-forest.lmin_rest-sp.log10(1.+d.zqso))/(forest.lmax_rest-forest.lmin_rest)*ncont).astype(int)
@@ -162,7 +162,7 @@ def var_cont(data,eta_lim=(0.5,1.5),vcont_lim=(0.,0.3)):
             bll = bll[w]
             bwe = bwe[w]
 
-            de = (d.fl/d.co-1)
+            de = d.fl/d.co-1.
             de = de[w]
 
             bins = bwe + nwe*bll
@@ -178,7 +178,7 @@ def var_cont(data,eta_lim=(0.5,1.5),vcont_lim=(0.,0.3)):
 
             c = sp.bincount(bins)
             count[:len(c)] += c
-            nqso[sp.unique(bins)]+=1
+            nqso[sp.unique(bins)] += 1
 
     w = count>0
     var_del[w] /= count[w]

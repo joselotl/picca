@@ -338,7 +338,7 @@ if __name__ == '__main__':
                 ll_cont, eta_cont, vcont, fudge_cont, nb_pixels_cont, var_cont, var_del_cont, var2_del_cont,\
                     count_cont, nqsos_cont, chi2_cont, err_eta_cont, err_vcont, err_fudge_cont = \
                     prep_del.var_cont(data,(args.eta_min,args.eta_max),(args.vlss_min,args.vlss_max))
-                forest.var_cont = interp1d(ll_cont[nb_pixels>0], vcont[nb_pixels>0.],
+                forest.var_cont = interp1d(ll_cont[nb_pixels_cont>0], vcont[nb_pixels_cont>0.],
                     fill_value = 'extrapolate',kind='nearest')
             else:
 
